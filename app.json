@@ -1,14 +1,15 @@
 {
   "expo": {
     "name": "duolingo-clone",
-    "slug": "duolingo-clone",
+    "slug": "jsm-testing",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "duolingoclone",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.juancabral12.jsm-testing"
     },
     "android": {
       "adaptiveIcon": {
@@ -37,6 +38,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e84ef483-013c-4dae-bdc9-f03cfb595ece"
+      }
+    },
+    "owner": "juancabral12s-team"
   }
 }
