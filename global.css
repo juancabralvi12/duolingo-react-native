@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Typography utilities - pairs the Poppins weight with the matching
+   font-size/line-height from the design system, so screens can write
+   `className="heading-1"` instead of stacking font + size + leading classes. */
+@layer components {
+  .heading-1 {
+    @apply font-poppins-bold text-h1 text-text-primary;
+  }
+  .heading-2 {
+    @apply font-poppins-semibold text-h2 text-text-primary;
+  }
+  .heading-3 {
+    @apply font-poppins-semibold text-h3 text-text-primary;
+  }
+  .heading-4 {
+    @apply font-poppins-medium text-h4 text-text-primary;
+  }
+  .body-large {
+    @apply font-poppins text-body-lg text-text-primary;
+  }
+  .body-medium {
+    @apply font-poppins text-body-md text-text-primary;
+  }
+  .body-small {
+    @apply font-poppins text-body-sm text-text-secondary;
+  }
+  .caption-text {
+    @apply font-poppins text-caption text-text-secondary;
+  }
+}
