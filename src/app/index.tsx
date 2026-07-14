@@ -1,4 +1,5 @@
-import { ScrollView, Text, View } from "react-native";
+import { Link } from "expo-router";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const SWATCHES: { label: string; className: string }[] = [
   { label: "primary.purple", className: "bg-primary-purple" },
@@ -24,6 +25,14 @@ export default function Index() {
           Lingua tokens, typography, and utilities.
         </Text>
       </View>
+
+      <Link href="/onboarding" asChild>
+        <TouchableOpacity className="items-center rounded-full bg-primary-purple px-6 py-4">
+          <Text className="font-poppins-semibold text-body-lg text-white">
+            View Onboarding Screen
+          </Text>
+        </TouchableOpacity>
+      </Link>
 
       <View className="gap-3">
         <Text className="heading-3">Colors</Text>
