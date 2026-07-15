@@ -1,10 +1,18 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useEffect } from "react";
+import { usePostHog } from "posthog-react-native";
 
 import { images } from "@/constants/images";
 
 export default function Onboarding() {
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    posthog.capture('onboarding_viewed');
+  }, [posthog]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <View className="flex-1 justify-between px-6 pb-6">
@@ -51,7 +59,10 @@ export default function Onboarding() {
         </View>
 
         <TouchableOpacity
-          onPress={() => router.push("/sign-up")}
+          onPress={() => {
+            posthog.capture('onboarding_get_started_tapped');
+            router.push("/sign-up");
+          }}
           activeOpacity={0.85}
           className="relative w-full flex-row items-center justify-center rounded-full bg-primary-purple py-4"
         >

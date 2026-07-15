@@ -3,6 +3,7 @@ import { useUser } from "@clerk/expo";
 import { router } from "expo-router";
 import { Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePostHog } from "posthog-react-native";
 
 import { ContinueLearningCard } from "@/components/home/ContinueLearningCard";
 import { NextUpCard } from "@/components/home/NextUpCard";
@@ -24,6 +25,7 @@ const AI_TEACHER_AVATAR_URI =
 export default function Home() {
   const { user } = useUser();
   const selectedLanguageCode = useLanguageStore((state) => state.selectedLanguageCode);
+  const posthog = usePostHog();
 
   const language = selectedLanguageCode ? getLanguageByCode(selectedLanguageCode) : undefined;
   const currentUnit = selectedLanguageCode
@@ -72,7 +74,14 @@ export default function Home() {
           <ContinueLearningCard
             languageName={language.name}
             levelLabel={`A1 • Unit ${currentUnit.order}`}
-            onPress={() => router.push("/learn")}
+            onPress={() => {
+              posthog.capture('continue_learning_tapped', {
+                language_name: language.name,
+                language_code: selectedLanguageCode,
+                unit_order: currentUnit.order,
+              });
+              router.push("/learn");
+            }}
           />
         ) : null}
 
@@ -121,7 +130,13 @@ export default function Home() {
           title="AI Video Call"
           subtitle="Practice speaking"
           avatarUri={AI_TEACHER_AVATAR_URI}
-          onPress={() => router.push("/ai-teacher")}
+          onPress={() => {
+            posthog.capture('ai_video_call_started', {
+              language_name: language?.name,
+              language_code: selectedLanguageCode,
+            });
+            router.push("/ai-teacher");
+          }}
         />
       </ScrollView>
     </SafeAreaView>
