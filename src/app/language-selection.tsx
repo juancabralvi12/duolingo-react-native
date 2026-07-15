@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { usePostHog } from "posthog-react-native";
 
 import { LanguageCard } from "@/components/LanguageCard";
 import { images } from "@/constants/images";
@@ -15,6 +16,16 @@ export default function LanguageSelection() {
   const setSelectedLanguageCode = useLanguageStore((state) => state.setSelectedLanguageCode);
   const [query, setQuery] = useState("");
   const [selectedCode, setSelectedCode] = useState(selectedLanguageCode ?? languages[0]?.code);
+  const posthog = usePostHog();
+  const hasTrackedSearch = useRef(false);
+
+  const handleSearchChange = (value: string) => {
+    setQuery(value);
+    if (!hasTrackedSearch.current && value.length > 0) {
+      posthog.capture('language_search_used');
+      hasTrackedSearch.current = true;
+    }
+  };
 
   const filteredLanguages = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -46,7 +57,7 @@ export default function LanguageSelection() {
           <Ionicons name="search-outline" size={20} color={colors.neutral.textSecondary} />
           <TextInput
             value={query}
-            onChangeText={setQuery}
+            onChangeText={handleSearchChange}
             placeholder="Search languages"
             placeholderTextColor={colors.neutral.textSecondary}
             className="body-medium flex-1"
@@ -72,6 +83,11 @@ export default function LanguageSelection() {
           <TouchableOpacity
             onPress={() => {
               if (!selectedCode) return;
+              const language = languages.find((l) => l.code === selectedCode);
+              posthog.capture('language_selected', {
+                language_code: selectedCode,
+                language_name: language?.name,
+              });
               setSelectedLanguageCode(selectedCode);
               router.replace("/");
             }}
