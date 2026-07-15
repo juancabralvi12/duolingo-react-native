@@ -11,9 +11,10 @@ import { useLanguageStore } from "@/store/languageStore";
 import { colors } from "@/theme";
 
 export default function LanguageSelection() {
+  const selectedLanguageCode = useLanguageStore((state) => state.selectedLanguageCode);
   const setSelectedLanguageCode = useLanguageStore((state) => state.setSelectedLanguageCode);
   const [query, setQuery] = useState("");
-  const [selectedCode, setSelectedCode] = useState(languages[0]?.code);
+  const [selectedCode, setSelectedCode] = useState(selectedLanguageCode ?? languages[0]?.code);
 
   const filteredLanguages = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
