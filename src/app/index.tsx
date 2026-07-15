@@ -1,4 +1,5 @@
-import { Link } from "expo-router";
+import { useAuth, useClerk, useUser } from "@clerk/expo";
+import { Link, Redirect } from "expo-router";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const SWATCHES: { label: string; className: string }[] = [
@@ -14,6 +15,18 @@ const SWATCHES: { label: string; className: string }[] = [
 ];
 
 export default function Index() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -24,6 +37,17 @@ export default function Index() {
         <Text className="body-medium text-text-secondary">
           Lingua tokens, typography, and utilities.
         </Text>
+      </View>
+
+      <View className="flex-row items-center justify-between rounded-2xl border border-border bg-surface p-4">
+        <Text className="body-medium text-text-primary">
+          Signed in as {user?.primaryEmailAddress?.emailAddress}
+        </Text>
+        <TouchableOpacity onPress={() => signOut()}>
+          <Text className="font-poppins-semibold text-body-md text-primary-purple">
+            Sign out
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <Link href="/onboarding" asChild>

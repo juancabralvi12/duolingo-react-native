@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,33 +16,58 @@ import { colors } from "@/theme";
 
 const CODE_LENGTH = 6;
 
+type VerifyResult = { success: boolean; message?: string };
+
 type VerificationModalProps = {
   visible: boolean;
   email: string;
   onClose: () => void;
-  onComplete: () => void;
+  onVerify: (code: string) => Promise<VerifyResult>;
+  onResend: () => Promise<void>;
 };
 
 export function VerificationModal({
   visible,
   email,
   onClose,
-  onComplete,
+  onVerify,
+  onResend,
 }: VerificationModalProps) {
   const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   const handleShow = () => {
     setCode("");
+    setError(null);
     inputRef.current?.focus();
   };
 
-  const handleChangeCode = (text: string) => {
+  const handleChangeCode = async (text: string) => {
     const digitsOnly = text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH);
     setCode(digitsOnly);
+    setError(null);
+
     if (digitsOnly.length === CODE_LENGTH) {
-      onComplete();
+      setIsSubmitting(true);
+      const result = await onVerify(digitsOnly);
+      setIsSubmitting(false);
+      if (!result.success) {
+        setError(result.message ?? "Invalid code. Please try again.");
+        setCode("");
+      }
     }
+  };
+
+  const handleResend = async () => {
+    setIsResending(true);
+    setError(null);
+    setCode("");
+    await onResend();
+    setIsResending(false);
+    inputRef.current?.focus();
   };
 
   return (
@@ -83,7 +110,11 @@ export function VerificationModal({
                 <View
                   key={index}
                   className={`h-14 w-11 items-center justify-center rounded-xl border bg-surface ${
-                    index === code.length ? "border-primary-purple" : "border-border"
+                    error
+                      ? "border-error"
+                      : index === code.length
+                        ? "border-primary-purple"
+                        : "border-border"
                   }`}
                 >
                   <Text className="font-poppins-semibold text-h3 text-text-primary">
@@ -97,9 +128,22 @@ export function VerificationModal({
                 onChangeText={handleChangeCode}
                 keyboardType="number-pad"
                 maxLength={CODE_LENGTH}
+                editable={!isSubmitting}
                 className="absolute inset-0 opacity-0"
               />
             </Pressable>
+
+            {isSubmitting && <ActivityIndicator color={colors.primary.purple} />}
+
+            {error && (
+              <Text className="text-center font-poppins text-body-sm text-error">{error}</Text>
+            )}
+
+            <TouchableOpacity onPress={handleResend} disabled={isResending} hitSlop={8}>
+              <Text className="text-center font-poppins-semibold text-body-md text-primary-purple">
+                {isResending ? "Resending…" : "Resend code"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </View>

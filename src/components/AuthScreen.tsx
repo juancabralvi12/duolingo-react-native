@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -10,7 +10,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useSignIn, useSignUp, useSSO } from "@clerk/expo";
 import { Href, router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 
 import { AuthInput } from "@/components/AuthInput";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -29,6 +31,10 @@ type AuthScreenProps = {
   footerLinkHref: Href;
 };
 
+const navigateAfterAuth = ({ decorateUrl }: { decorateUrl: (url: string) => string }) => {
+  router.replace(decorateUrl("/") as Href);
+};
+
 export function AuthScreen({
   mode,
   title,
@@ -40,16 +46,109 @@ export function AuthScreen({
 }: AuthScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const { signUp, errors: signUpErrors, fetchStatus: signUpFetchStatus } = useSignUp();
+  const { signIn, errors: signInErrors, fetchStatus: signInFetchStatus } = useSignIn();
+  const { startSSOFlow } = useSSO();
+
   const showPassword = mode === "sign-up";
+  const isSubmitting =
+    mode === "sign-up" ? signUpFetchStatus === "fetching" : signInFetchStatus === "fetching";
 
-  const handleSubmit = () => setIsVerifying(true);
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      void WebBrowser.warmUpAsync();
+      return () => {
+        void WebBrowser.coolDownAsync();
+      };
+    }
+  }, []);
 
-  const handleVerified = () => {
-    setIsVerifying(false);
-    router.replace("/");
+  const handleSubmit = async () => {
+    setFormError(null);
+
+    if (mode === "sign-up") {
+      const { error } = await signUp.password({ emailAddress: email, password });
+      if (error) {
+        // Field-specific errors (email/password) are already surfaced inline via
+        // signUpErrors.fields below; nothing generic to add here.
+        return;
+      }
+
+      if (signUp.status === "complete") {
+        await signUp.finalize({ navigate: navigateAfterAuth });
+        return;
+      }
+
+      if (signUp.unverifiedFields.includes("email_address")) {
+        const { error: codeError } = await signUp.verifications.sendEmailCode();
+        if (codeError) {
+          setFormError(codeError.longMessage ?? codeError.message);
+          return;
+        }
+        setIsVerifying(true);
+      }
+      return;
+    }
+
+    const { error } = await signIn.emailCode.sendCode({ emailAddress: email });
+    if (error) {
+      // Field-specific errors (identifier) are already surfaced inline via
+      // signInErrors.fields below; nothing generic to add here.
+      return;
+    }
+    setIsVerifying(true);
   };
+
+  const handleVerifyCode = async (code: string) => {
+    if (mode === "sign-up") {
+      const { error } = await signUp.verifications.verifyEmailCode({ code });
+      if (error) {
+        return { success: false, message: error.longMessage ?? error.message };
+      }
+      if (signUp.status === "complete") {
+        await signUp.finalize({ navigate: navigateAfterAuth });
+      }
+      return { success: true };
+    }
+
+    const { error } = await signIn.emailCode.verifyCode({ code });
+    if (error) {
+      return { success: false, message: error.longMessage ?? error.message };
+    }
+    if (signIn.status === "complete") {
+      await signIn.finalize({ navigate: navigateAfterAuth });
+    }
+    return { success: true };
+  };
+
+  const handleResendCode = async () => {
+    if (mode === "sign-up") {
+      await signUp.verifications.sendEmailCode();
+    } else {
+      await signIn.emailCode.sendCode();
+    }
+  };
+
+  const handleSocialSignIn = async (strategy: "oauth_google") => {
+    setFormError(null);
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({ strategy });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        router.replace("/");
+      }
+    } catch (err) {
+      console.error("SSO error:", JSON.stringify(err, null, 2));
+      setFormError("Something went wrong with social sign-in. Please try again.");
+    }
+  };
+
+  const emailError =
+    mode === "sign-up" ? signUpErrors.fields.emailAddress?.message : signInErrors.fields.identifier?.message;
+  const passwordError = mode === "sign-up" ? signUpErrors.fields.password?.message : undefined;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -112,6 +211,7 @@ export function AuthScreen({
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              error={emailError}
             />
             {showPassword && (
               <AuthInput
@@ -120,11 +220,18 @@ export function AuthScreen({
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                error={passwordError}
               />
             )}
           </View>
 
-          <PrimaryButton label={submitLabel} onPress={handleSubmit} />
+          {formError && (
+            <Text className="text-center font-poppins text-body-sm text-error">{formError}</Text>
+          )}
+
+          {mode === "sign-up" && <View nativeID="clerk-captcha" />}
+
+          <PrimaryButton label={submitLabel} onPress={handleSubmit} disabled={isSubmitting} />
 
           <View className="flex-row items-center gap-3">
             <View className="h-px flex-1 bg-border" />
@@ -137,16 +244,7 @@ export function AuthScreen({
               label="Continue with Google"
               iconName="logo-google"
               iconColor={colors.neutral.textPrimary}
-            />
-            <SocialButton
-              label="Continue with Facebook"
-              iconName="logo-facebook"
-              iconColor="#1877F2"
-            />
-            <SocialButton
-              label="Continue with Apple"
-              iconName="logo-apple"
-              iconColor="#000000"
+              onPress={() => handleSocialSignIn("oauth_google")}
             />
           </View>
 
@@ -168,7 +266,8 @@ export function AuthScreen({
         visible={isVerifying}
         email={email}
         onClose={() => setIsVerifying(false)}
-        onComplete={handleVerified}
+        onVerify={handleVerifyCode}
+        onResend={handleResendCode}
       />
     </SafeAreaView>
   );
