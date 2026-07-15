@@ -58,6 +58,14 @@ export default function Index() {
         </TouchableOpacity>
       </Link>
 
+      <Link href="/language-selection" asChild>
+        <TouchableOpacity className="items-center rounded-full bg-primary-purple px-6 py-4">
+          <Text className="font-poppins-semibold text-body-lg text-white">
+            Choose a Language
+          </Text>
+        </TouchableOpacity>
+      </Link>
+
       <View className="gap-3">
         <Text className="heading-3">Colors</Text>
         <View className="flex-row flex-wrap gap-3">
