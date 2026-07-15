@@ -17,7 +17,25 @@ export const languages: Language[] = [
     code: "ja",
     name: "Japanese",
     nativeName: "日本語",
-    flagEmoji: "https://flagcdn.com/w320/ja.png",
+    flagEmoji: "https://flagcdn.com/w320/jp.png",
+  },
+  {
+    code: "ko",
+    name: "Korean",
+    nativeName: "한국어",
+    flagEmoji: "https://flagcdn.com/w320/kr.png",
+  },
+  {
+    code: "de",
+    name: "German",
+    nativeName: "Deutsch",
+    flagEmoji: "https://flagcdn.com/w320/de.png",
+  },
+  {
+    code: "zh",
+    name: "Chinese",
+    nativeName: "中文",
+    flagEmoji: "https://flagcdn.com/w320/cn.png",
   },
 ];
 

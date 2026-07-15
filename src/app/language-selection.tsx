@@ -62,25 +62,28 @@ export default function LanguageSelection() {
             />
           ))}
         </View>
+      </ScrollView>
+
+      <View className="gap-4 pt-2">
+        <View className="px-6">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            disabled={!selectedCode}
+            activeOpacity={0.85}
+            className={`items-center justify-center rounded-full bg-primary-purple py-4 ${
+              !selectedCode ? "opacity-50" : ""
+            }`}
+          >
+            <Text className="font-poppins-semibold text-body-lg text-white">Confirm</Text>
+          </TouchableOpacity>
+        </View>
 
         <Image
           source={images.earth}
-          className="aspect-square w-full"
-          resizeMode="contain"
+          className="h-36 w-full"
+          style={{ width: "100%", height: 144 }}
+          resizeMode="cover"
         />
-      </ScrollView>
-
-      <View className="px-6 pb-4 pt-2">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          disabled={!selectedCode}
-          activeOpacity={0.85}
-          className={`items-center justify-center rounded-full bg-primary-purple py-4 ${
-            !selectedCode ? "opacity-50" : ""
-          }`}
-        >
-          <Text className="font-poppins-semibold text-body-lg text-white">Confirm</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
