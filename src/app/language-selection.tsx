@@ -7,9 +7,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LanguageCard } from "@/components/LanguageCard";
 import { images } from "@/constants/images";
 import { languages } from "@/data/languages";
+import { useLanguageStore } from "@/store/languageStore";
 import { colors } from "@/theme";
 
 export default function LanguageSelection() {
+  const setSelectedLanguageCode = useLanguageStore((state) => state.setSelectedLanguageCode);
   const [query, setQuery] = useState("");
   const [selectedCode, setSelectedCode] = useState(languages[0]?.code);
 
@@ -67,7 +69,11 @@ export default function LanguageSelection() {
       <View className="gap-4 pt-2">
         <View className="px-6">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => {
+              if (!selectedCode) return;
+              setSelectedLanguageCode(selectedCode);
+              router.replace("/");
+            }}
             disabled={!selectedCode}
             activeOpacity={0.85}
             className={`items-center justify-center rounded-full bg-primary-purple py-4 ${

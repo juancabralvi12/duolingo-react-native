@@ -1,6 +1,9 @@
 import { useAuth, useClerk, useUser } from "@clerk/expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, Redirect } from "expo-router";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+
+import { useLanguageStore } from "@/store/languageStore";
 
 const SWATCHES: { label: string; className: string }[] = [
   { label: "primary.purple", className: "bg-primary-purple" },
@@ -18,13 +21,18 @@ export default function Index() {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { selectedLanguageCode, hasHydrated, clearSelectedLanguageCode } = useLanguageStore();
 
-  if (!isLoaded) {
+  if (!isLoaded || !hasHydrated) {
     return null;
   }
 
   if (!isSignedIn) {
     return <Redirect href="/onboarding" />;
+  }
+
+  if (!selectedLanguageCode) {
+    return <Redirect href="/language-selection" />;
   }
 
   return (
@@ -49,6 +57,18 @@ export default function Index() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        onPress={async () => {
+          await AsyncStorage.clear();
+          clearSelectedLanguageCode();
+        }}
+        className="items-center rounded-full bg-error px-6 py-4"
+      >
+        <Text className="font-poppins-semibold text-body-lg text-white">
+          Clear Async Storage (Testing)
+        </Text>
+      </TouchableOpacity>
 
       <Link href="/onboarding" asChild>
         <TouchableOpacity className="items-center rounded-full bg-primary-purple px-6 py-4">
