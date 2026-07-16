@@ -1,28 +1,13 @@
-import { useAuth, useUser } from "@clerk/expo";
+import { useAuth } from "@clerk/expo";
 import { Redirect } from "expo-router";
 import { Tabs } from "expo-router/tabs";
-import { useEffect } from "react";
-import { usePostHog } from "posthog-react-native";
 
 import { CustomTabBar } from "@/components/CustomTabBar";
 import { useLanguageStore } from "@/store/languageStore";
 
 export default function TabsLayout() {
   const { isLoaded, isSignedIn } = useAuth();
-  const { user } = useUser();
   const { selectedLanguageCode, hasHydrated } = useLanguageStore();
-  const posthog = usePostHog();
-
-  useEffect(() => {
-    if (user) {
-      posthog.identify(user.id, {
-        $set: {
-          email: user.primaryEmailAddress?.emailAddress,
-          name: user.fullName ?? undefined,
-        },
-      });
-    }
-  }, [user, posthog]);
 
   if (!isLoaded || !hasHydrated) {
     return null;

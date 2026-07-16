@@ -2,7 +2,6 @@ import { useClerk, useUser } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { usePostHog } from "posthog-react-native";
 
 import { useLanguageStore } from "@/store/languageStore";
 
@@ -10,13 +9,6 @@ export default function Profile() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const clearSelectedLanguageCode = useLanguageStore((state) => state.clearSelectedLanguageCode);
-  const posthog = usePostHog();
-
-  const handleSignOut = () => {
-    posthog.capture('sign_out');
-    posthog.reset();
-    void signOut();
-  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -32,7 +24,7 @@ export default function Profile() {
           <Text className="body-medium text-text-primary">
             Signed in as {user?.primaryEmailAddress?.emailAddress}
           </Text>
-          <TouchableOpacity onPress={handleSignOut}>
+          <TouchableOpacity onPress={() => signOut()}>
             <Text className="font-poppins-semibold text-body-md text-primary-purple">
               Sign out
             </Text>

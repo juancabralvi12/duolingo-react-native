@@ -13,7 +13,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSignIn, useSignUp, useSSO } from "@clerk/expo";
 import { Href, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { usePostHog } from "posthog-react-native";
 
 import { AuthInput } from "@/components/AuthInput";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -53,7 +52,6 @@ export function AuthScreen({
   const { signUp, errors: signUpErrors, fetchStatus: signUpFetchStatus } = useSignUp();
   const { signIn, errors: signInErrors, fetchStatus: signInFetchStatus } = useSignIn();
   const { startSSOFlow } = useSSO();
-  const posthog = usePostHog();
 
   const showPassword = mode === "sign-up";
   const isSubmitting =
@@ -72,7 +70,6 @@ export function AuthScreen({
     setFormError(null);
 
     if (mode === "sign-up") {
-      posthog.capture('sign_up_submitted', { method: 'email' });
       const { error } = await signUp.password({ emailAddress: email, password });
       if (error) {
         // Field-specific errors (email/password) are already surfaced inline via
@@ -96,7 +93,6 @@ export function AuthScreen({
       return;
     }
 
-    posthog.capture('sign_in_submitted', { method: 'email' });
     const { error } = await signIn.emailCode.sendCode({ emailAddress: email });
     if (error) {
       // Field-specific errors (identifier) are already surfaced inline via
@@ -113,7 +109,6 @@ export function AuthScreen({
         return { success: false, message: error.longMessage ?? error.message };
       }
       if (signUp.status === "complete") {
-        posthog.capture('sign_up_completed', { method: 'email' });
         await signUp.finalize({ navigate: navigateAfterAuth });
       }
       return { success: true };
@@ -124,7 +119,6 @@ export function AuthScreen({
       return { success: false, message: error.longMessage ?? error.message };
     }
     if (signIn.status === "complete") {
-      posthog.capture('sign_in_completed', { method: 'email' });
       await signIn.finalize({ navigate: navigateAfterAuth });
     }
     return { success: true };
@@ -140,7 +134,6 @@ export function AuthScreen({
 
   const handleSocialSignIn = async (strategy: "oauth_google") => {
     setFormError(null);
-    posthog.capture('sso_sign_in_started', { strategy });
     try {
       const { createdSessionId, setActive } = await startSSOFlow({ strategy });
       if (createdSessionId && setActive) {
@@ -149,10 +142,6 @@ export function AuthScreen({
       }
     } catch (err) {
       console.error("SSO error:", JSON.stringify(err, null, 2));
-      posthog.captureException(err instanceof Error ? err : new Error(String(err)), {
-        context: 'sso_sign_in',
-        strategy,
-      });
       setFormError("Something went wrong with social sign-in. Please try again.");
     }
   };

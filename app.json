@@ -36,8 +36,7 @@
       ],
       "expo-secure-store",
       "expo-web-browser",
-      "@clerk/expo",
-      "expo-localization"
+      "@clerk/expo"
     ],
     "experiments": {
       "typedRoutes": true,
