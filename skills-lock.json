@@ -102,6 +102,54 @@
       "sourceType": "github",
       "skillPath": "plugins/expo/skills/expo-upgrade/SKILL.md",
       "computedHash": "2ccb12069eede1187dc9cb857bcb9725054e6e6800a9406fbb25469504f4281e"
+    },
+    "stream": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream/SKILL.md",
+      "computedHash": "8c5b82d20666632f0b4732a0362c550c8d1eb897cd157b6126cf9aa8b0011378"
+    },
+    "stream-android": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream-android/SKILL.md",
+      "computedHash": "b4cd60d8b80a2a22d2c797f9c165bacf59b3eaf31786d760e7b1303913b629c0"
+    },
+    "stream-builder": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream-builder/SKILL.md",
+      "computedHash": "f3fe25bb5688e5e135cf28ebefd5d842fb986f0896630dbbb87a6a00163d56d9"
+    },
+    "stream-docs": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream-docs/SKILL.md",
+      "computedHash": "f527d6199d59883240ddeac1022b19e231e1868ef8a48713157f172a0c28fc45"
+    },
+    "stream-flutter": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream-flutter/SKILL.md",
+      "computedHash": "197ba0459a955ec9ddcc606f7ddad5e332c9de8e4f6b85544a48b28bc6b7b65e"
+    },
+    "stream-react": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream-react/SKILL.md",
+      "computedHash": "b50a04b0683316747868271743b7a2b6fdabcb782a50c18a3c229a09e0ee9e9f"
+    },
+    "stream-react-native": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream-react-native/SKILL.md",
+      "computedHash": "1e5e0dc501d965187f7aeb38035fed2150602a7a3bc24609e1ff227b60ca9fe0"
+    },
+    "stream-swift": {
+      "source": "GetStream/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/stream-swift/SKILL.md",
+      "computedHash": "600c3ec0b758de46b535958a2985d46511ed0a7a9be8060851297604f3894465"
     }
   }
 }
