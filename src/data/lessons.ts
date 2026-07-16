@@ -80,6 +80,7 @@ export const lessons: Lesson[] = [
       kickoffMessage:
         "¡Hola! I'm so happy to practice Spanish with you today. Let's start with something simple — how to say hello. Ready?",
     },
+    imageUrl: "https://picsum.photos/seed/es-unit-1-lesson-1/200/200",
   },
   {
     id: "es-unit-1-lesson-2",
@@ -127,6 +128,7 @@ export const lessons: Lesson[] = [
       kickoffMessage:
         "¡Bienvenido de nuevo! Now that you can say hello, let's learn how to introduce yourself in Spanish. Want to give it a try?",
     },
+    imageUrl: "https://picsum.photos/seed/es-unit-1-lesson-2/200/200",
   },
 
   // ---------------------------------------------------------------------
@@ -179,6 +181,7 @@ export const lessons: Lesson[] = [
       kickoffMessage:
         "Bonjour! I'm excited to practice French with you today. Let's start with something simple — how to say hello. Ready?",
     },
+    imageUrl: "https://picsum.photos/seed/fr-unit-1-lesson-1/200/200",
   },
   {
     id: "fr-unit-1-lesson-2",
@@ -226,6 +229,7 @@ export const lessons: Lesson[] = [
       kickoffMessage:
         "Re-bonjour! Now that you can say hello, let's learn how to introduce yourself in French. Want to give it a try?",
     },
+    imageUrl: "https://picsum.photos/seed/fr-unit-1-lesson-2/200/200",
   },
 
   // ---------------------------------------------------------------------
@@ -290,6 +294,7 @@ export const lessons: Lesson[] = [
       kickoffMessage:
         "こんにちは! I'm excited to practice Japanese with you today. Let's start with something simple — how to say hello. Ready?",
     },
+    imageUrl: "https://picsum.photos/seed/ja-unit-1-lesson-1/200/200",
   },
   {
     id: "ja-unit-1-lesson-2",
@@ -340,6 +345,810 @@ export const lessons: Lesson[] = [
       kickoffMessage:
         "また会いましたね! Now that you can say hello, let's learn how to introduce yourself in Japanese. Want to give it a try?",
     },
+    imageUrl: "https://picsum.photos/seed/ja-unit-1-lesson-2/200/200",
+  },
+
+  // ---------------------------------------------------------------------
+  // Korean
+  // ---------------------------------------------------------------------
+  {
+    id: "ko-unit-1-lesson-1",
+    unitId: "ko-unit-1",
+    languageCode: "ko",
+    order: 1,
+    title: "Greetings & Introductions",
+    goal: "Greet someone, say goodbye, and give your name in Korean.",
+    vocabulary: [
+      { word: "안녕하세요", translation: "Hello", pronunciation: "an-nyeong-ha-se-yo" },
+      { word: "안녕히 가세요", translation: "Goodbye", pronunciation: "an-nyeong-hi ga-se-yo" },
+      { word: "감사합니다", translation: "Thank you", pronunciation: "gam-sa-ham-ni-da" },
+      { word: "이름", translation: "Name", pronunciation: "i-reum" },
+    ],
+    phrases: [
+      { text: "만나서 반갑습니다.", translation: "Nice to meet you." },
+      { text: "제 이름은 ...입니다.", translation: "My name is..." },
+    ],
+    activities: [
+      vocabularyActivity("ko-u1-l1-a1", {
+        word: "안녕하세요",
+        translation: "Hello",
+        pronunciation: "an-nyeong-ha-se-yo",
+      }),
+      vocabularyActivity("ko-u1-l1-a2", {
+        word: "안녕히 가세요",
+        translation: "Goodbye",
+        pronunciation: "an-nyeong-hi ga-se-yo",
+      }),
+      phraseActivity("ko-u1-l1-a3", {
+        text: "만나서 반갑습니다.",
+        translation: "Nice to meet you.",
+      }),
+      phraseActivity("ko-u1-l1-a4", {
+        text: "제 이름은 ...입니다.",
+        translation: "My name is...",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Korean teacher helping a complete beginner. Speak mostly in English, and introduce Korean words slowly with clear translations. Stay focused only on this lesson's goal: greeting someone, saying goodbye, and giving your name. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "안녕하세요! I'm so happy to practice Korean with you today. Let's start with something simple — how to say hello. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/ko-unit-1-lesson-1/200/200",
+  },
+  {
+    id: "ko-unit-1-lesson-2",
+    unitId: "ko-unit-1",
+    languageCode: "ko",
+    order: 2,
+    title: "Daily Life",
+    goal: "Talk about simple daily routines in Korean.",
+    vocabulary: [
+      { word: "아침", translation: "Morning", pronunciation: "a-chim" },
+      { word: "물", translation: "Water", pronunciation: "mul" },
+      { word: "자다", translation: "To sleep", pronunciation: "ja-da" },
+    ],
+    phrases: [
+      { text: "몇 시예요?", translation: "What time is it?" },
+      { text: "저는 피곤해요.", translation: "I am tired." },
+    ],
+    activities: [
+      vocabularyActivity("ko-u1-l2-a1", {
+        word: "아침",
+        translation: "Morning",
+        pronunciation: "a-chim",
+      }),
+      vocabularyActivity("ko-u1-l2-a2", {
+        word: "물",
+        translation: "Water",
+        pronunciation: "mul",
+      }),
+      phraseActivity("ko-u1-l2-a3", {
+        text: "몇 시예요?",
+        translation: "What time is it?",
+      }),
+      phraseActivity("ko-u1-l2-a4", {
+        text: "저는 피곤해요.",
+        translation: "I am tired.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Korean teacher helping a complete beginner. Speak mostly in English, and introduce Korean words slowly with clear translations. Stay focused only on this lesson's goal: talking about simple daily routines. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "다시 만났네요! Now let's talk about daily life in Korean — things like mornings and getting some rest. Ready to start?",
+    },
+    imageUrl: "https://picsum.photos/seed/ko-unit-1-lesson-2/200/200",
+  },
+  {
+    id: "ko-unit-1-lesson-3",
+    unitId: "ko-unit-1",
+    languageCode: "ko",
+    order: 3,
+    title: "At the Café",
+    goal: "Order a drink and ask for the bill in Korean.",
+    vocabulary: [
+      { word: "커피", translation: "Coffee", pronunciation: "keo-pi" },
+      { word: "차", translation: "Tea", pronunciation: "cha" },
+      { word: "메뉴", translation: "Menu", pronunciation: "me-nyu" },
+    ],
+    phrases: [
+      { text: "커피 주세요.", translation: "I would like a coffee." },
+      { text: "계산서 주세요.", translation: "The bill, please." },
+    ],
+    activities: [
+      vocabularyActivity("ko-u1-l3-a1", {
+        word: "커피",
+        translation: "Coffee",
+        pronunciation: "keo-pi",
+      }),
+      vocabularyActivity("ko-u1-l3-a2", {
+        word: "메뉴",
+        translation: "Menu",
+        pronunciation: "me-nyu",
+      }),
+      phraseActivity("ko-u1-l3-a3", {
+        text: "커피 주세요.",
+        translation: "I would like a coffee.",
+      }),
+      phraseActivity("ko-u1-l3-a4", {
+        text: "계산서 주세요.",
+        translation: "The bill, please.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Korean teacher helping a complete beginner. Speak mostly in English, and introduce Korean words slowly with clear translations. Stay focused only on this lesson's goal: ordering a drink and asking for the bill at a café. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "카페에 오신 걸 환영해요! Let's practice ordering something to drink at a café in Korean. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/ko-unit-1-lesson-3/200/200",
+  },
+  {
+    id: "ko-unit-1-lesson-4",
+    unitId: "ko-unit-1",
+    languageCode: "ko",
+    order: 4,
+    title: "Travel & Directions",
+    goal: "Ask for and understand simple directions in Korean.",
+    vocabulary: [
+      { word: "왼쪽", translation: "Left", pronunciation: "oen-jjok" },
+      { word: "오른쪽", translation: "Right", pronunciation: "o-reun-jjok" },
+      { word: "공항", translation: "Airport", pronunciation: "gong-hang" },
+    ],
+    phrases: [
+      { text: "...이 어디예요?", translation: "Where is the...?" },
+      { text: "직진하세요.", translation: "Go straight ahead." },
+    ],
+    activities: [
+      vocabularyActivity("ko-u1-l4-a1", {
+        word: "왼쪽",
+        translation: "Left",
+        pronunciation: "oen-jjok",
+      }),
+      vocabularyActivity("ko-u1-l4-a2", {
+        word: "오른쪽",
+        translation: "Right",
+        pronunciation: "o-reun-jjok",
+      }),
+      phraseActivity("ko-u1-l4-a3", {
+        text: "...이 어디예요?",
+        translation: "Where is the...?",
+      }),
+      phraseActivity("ko-u1-l4-a4", {
+        text: "직진하세요.",
+        translation: "Go straight ahead.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Korean teacher helping a complete beginner. Speak mostly in English, and introduce Korean words slowly with clear translations. Stay focused only on this lesson's goal: asking for and understanding simple directions. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "길을 찾아볼까요? Let's learn how to ask for directions in Korean. Ready to give it a try?",
+    },
+    imageUrl: "https://picsum.photos/seed/ko-unit-1-lesson-4/200/200",
+  },
+  {
+    id: "ko-unit-1-lesson-5",
+    unitId: "ko-unit-1",
+    languageCode: "ko",
+    order: 5,
+    title: "Shopping",
+    goal: "Ask the price of something and say you want to buy it in Korean.",
+    vocabulary: [
+      { word: "돈", translation: "Money", pronunciation: "don" },
+      { word: "비싸요", translation: "Expensive", pronunciation: "bi-ssa-yo" },
+      { word: "싸요", translation: "Cheap", pronunciation: "ssa-yo" },
+    ],
+    phrases: [
+      { text: "이거 얼마예요?", translation: "How much is this?" },
+      { text: "이거 살게요.", translation: "I would like to buy this." },
+    ],
+    activities: [
+      vocabularyActivity("ko-u1-l5-a1", {
+        word: "돈",
+        translation: "Money",
+        pronunciation: "don",
+      }),
+      vocabularyActivity("ko-u1-l5-a2", {
+        word: "비싸요",
+        translation: "Expensive",
+        pronunciation: "bi-ssa-yo",
+      }),
+      phraseActivity("ko-u1-l5-a3", {
+        text: "이거 얼마예요?",
+        translation: "How much is this?",
+      }),
+      phraseActivity("ko-u1-l5-a4", {
+        text: "이거 살게요.",
+        translation: "I would like to buy this.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Korean teacher helping a complete beginner. Speak mostly in English, and introduce Korean words slowly with clear translations. Stay focused only on this lesson's goal: asking the price of something and saying you want to buy it. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "쇼핑하러 가볼까요? Let's practice shopping phrases in Korean. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/ko-unit-1-lesson-5/200/200",
+  },
+  {
+    id: "ko-unit-1-lesson-6",
+    unitId: "ko-unit-1",
+    languageCode: "ko",
+    order: 6,
+    title: "Family & Friends",
+    goal: "Talk about your family and friends in Korean.",
+    vocabulary: [
+      { word: "엄마", translation: "Mother", pronunciation: "eom-ma" },
+      { word: "아빠", translation: "Father", pronunciation: "a-ppa" },
+      { word: "친구", translation: "Friend", pronunciation: "chin-gu" },
+    ],
+    phrases: [
+      { text: "이 사람은 제 친구예요.", translation: "This is my friend." },
+      { text: "저는 가족을 사랑해요.", translation: "I love my family." },
+    ],
+    activities: [
+      vocabularyActivity("ko-u1-l6-a1", {
+        word: "엄마",
+        translation: "Mother",
+        pronunciation: "eom-ma",
+      }),
+      vocabularyActivity("ko-u1-l6-a2", {
+        word: "친구",
+        translation: "Friend",
+        pronunciation: "chin-gu",
+      }),
+      phraseActivity("ko-u1-l6-a3", {
+        text: "이 사람은 제 친구예요.",
+        translation: "This is my friend.",
+      }),
+      phraseActivity("ko-u1-l6-a4", {
+        text: "저는 가족을 사랑해요.",
+        translation: "I love my family.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Korean teacher helping a complete beginner. Speak mostly in English, and introduce Korean words slowly with clear translations. Stay focused only on this lesson's goal: talking about family and friends. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "가족 이야기를 해볼까요? Let's learn how to talk about family and friends in Korean. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/ko-unit-1-lesson-6/200/200",
+  },
+
+  // ---------------------------------------------------------------------
+  // German
+  // ---------------------------------------------------------------------
+  {
+    id: "de-unit-1-lesson-1",
+    unitId: "de-unit-1",
+    languageCode: "de",
+    order: 1,
+    title: "Greetings & Introductions",
+    goal: "Greet someone, say goodbye, and give your name in German.",
+    vocabulary: [
+      { word: "Hallo", translation: "Hello", pronunciation: "HAH-loh" },
+      { word: "Auf Wiedersehen", translation: "Goodbye", pronunciation: "owf VEE-der-zayn" },
+      { word: "Danke", translation: "Thank you", pronunciation: "DAHNG-kuh" },
+      { word: "Name", translation: "Name", pronunciation: "NAH-muh" },
+    ],
+    phrases: [
+      { text: "Freut mich.", translation: "Nice to meet you." },
+      { text: "Ich heiße...", translation: "My name is..." },
+    ],
+    activities: [
+      vocabularyActivity("de-u1-l1-a1", {
+        word: "Hallo",
+        translation: "Hello",
+        pronunciation: "HAH-loh",
+      }),
+      vocabularyActivity("de-u1-l1-a2", {
+        word: "Auf Wiedersehen",
+        translation: "Goodbye",
+        pronunciation: "owf VEE-der-zayn",
+      }),
+      phraseActivity("de-u1-l1-a3", {
+        text: "Freut mich.",
+        translation: "Nice to meet you.",
+      }),
+      phraseActivity("de-u1-l1-a4", {
+        text: "Ich heiße...",
+        translation: "My name is...",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging German teacher helping a complete beginner. Speak mostly in English, and introduce German words slowly with clear translations. Stay focused only on this lesson's goal: greeting someone, saying goodbye, and giving your name. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "Hallo! I'm so happy to practice German with you today. Let's start with something simple — how to say hello. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/de-unit-1-lesson-1/200/200",
+  },
+  {
+    id: "de-unit-1-lesson-2",
+    unitId: "de-unit-1",
+    languageCode: "de",
+    order: 2,
+    title: "Daily Life",
+    goal: "Talk about simple daily routines in German.",
+    vocabulary: [
+      { word: "Morgen", translation: "Morning", pronunciation: "MOR-gen" },
+      { word: "Wasser", translation: "Water", pronunciation: "VAH-ser" },
+      { word: "schlafen", translation: "To sleep", pronunciation: "SHLAH-fen" },
+    ],
+    phrases: [
+      { text: "Wie spät ist es?", translation: "What time is it?" },
+      { text: "Ich bin müde.", translation: "I am tired." },
+    ],
+    activities: [
+      vocabularyActivity("de-u1-l2-a1", {
+        word: "Morgen",
+        translation: "Morning",
+        pronunciation: "MOR-gen",
+      }),
+      vocabularyActivity("de-u1-l2-a2", {
+        word: "Wasser",
+        translation: "Water",
+        pronunciation: "VAH-ser",
+      }),
+      phraseActivity("de-u1-l2-a3", {
+        text: "Wie spät ist es?",
+        translation: "What time is it?",
+      }),
+      phraseActivity("de-u1-l2-a4", {
+        text: "Ich bin müde.",
+        translation: "I am tired.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging German teacher helping a complete beginner. Speak mostly in English, and introduce German words slowly with clear translations. Stay focused only on this lesson's goal: talking about simple daily routines. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "Schön, dich wiederzusehen! Now let's talk about daily life in German — things like mornings and getting some rest. Ready to start?",
+    },
+    imageUrl: "https://picsum.photos/seed/de-unit-1-lesson-2/200/200",
+  },
+  {
+    id: "de-unit-1-lesson-3",
+    unitId: "de-unit-1",
+    languageCode: "de",
+    order: 3,
+    title: "At the Café",
+    goal: "Order a drink and ask for the bill in German.",
+    vocabulary: [
+      { word: "Kaffee", translation: "Coffee", pronunciation: "kah-FAY" },
+      { word: "Tee", translation: "Tea", pronunciation: "tay" },
+      { word: "Speisekarte", translation: "Menu", pronunciation: "SHPY-zeh-kar-teh" },
+    ],
+    phrases: [
+      { text: "Ich hätte gern einen Kaffee.", translation: "I would like a coffee." },
+      { text: "Die Rechnung, bitte.", translation: "The bill, please." },
+    ],
+    activities: [
+      vocabularyActivity("de-u1-l3-a1", {
+        word: "Kaffee",
+        translation: "Coffee",
+        pronunciation: "kah-FAY",
+      }),
+      vocabularyActivity("de-u1-l3-a2", {
+        word: "Speisekarte",
+        translation: "Menu",
+        pronunciation: "SHPY-zeh-kar-teh",
+      }),
+      phraseActivity("de-u1-l3-a3", {
+        text: "Ich hätte gern einen Kaffee.",
+        translation: "I would like a coffee.",
+      }),
+      phraseActivity("de-u1-l3-a4", {
+        text: "Die Rechnung, bitte.",
+        translation: "The bill, please.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging German teacher helping a complete beginner. Speak mostly in English, and introduce German words slowly with clear translations. Stay focused only on this lesson's goal: ordering a drink and asking for the bill at a café. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "Willkommen im Café! Let's practice ordering something to drink in German. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/de-unit-1-lesson-3/200/200",
+  },
+  {
+    id: "de-unit-1-lesson-4",
+    unitId: "de-unit-1",
+    languageCode: "de",
+    order: 4,
+    title: "Travel & Directions",
+    goal: "Ask for and understand simple directions in German.",
+    vocabulary: [
+      { word: "links", translation: "Left", pronunciation: "links" },
+      { word: "rechts", translation: "Right", pronunciation: "rekhts" },
+      { word: "Flughafen", translation: "Airport", pronunciation: "FLOOK-hah-fen" },
+    ],
+    phrases: [
+      { text: "Wo ist...?", translation: "Where is the...?" },
+      { text: "Geradeaus gehen.", translation: "Go straight ahead." },
+    ],
+    activities: [
+      vocabularyActivity("de-u1-l4-a1", {
+        word: "links",
+        translation: "Left",
+        pronunciation: "links",
+      }),
+      vocabularyActivity("de-u1-l4-a2", {
+        word: "rechts",
+        translation: "Right",
+        pronunciation: "rekhts",
+      }),
+      phraseActivity("de-u1-l4-a3", {
+        text: "Wo ist...?",
+        translation: "Where is the...?",
+      }),
+      phraseActivity("de-u1-l4-a4", {
+        text: "Geradeaus gehen.",
+        translation: "Go straight ahead.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging German teacher helping a complete beginner. Speak mostly in English, and introduce German words slowly with clear translations. Stay focused only on this lesson's goal: asking for and understanding simple directions. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "Suchen wir den Weg! Let's learn how to ask for directions in German. Ready to give it a try?",
+    },
+    imageUrl: "https://picsum.photos/seed/de-unit-1-lesson-4/200/200",
+  },
+  {
+    id: "de-unit-1-lesson-5",
+    unitId: "de-unit-1",
+    languageCode: "de",
+    order: 5,
+    title: "Shopping",
+    goal: "Ask the price of something and say you want to buy it in German.",
+    vocabulary: [
+      { word: "Geld", translation: "Money", pronunciation: "gelt" },
+      { word: "teuer", translation: "Expensive", pronunciation: "TOY-er" },
+      { word: "billig", translation: "Cheap", pronunciation: "BILL-ikh" },
+    ],
+    phrases: [
+      { text: "Wie viel kostet das?", translation: "How much is this?" },
+      { text: "Ich möchte das kaufen.", translation: "I would like to buy this." },
+    ],
+    activities: [
+      vocabularyActivity("de-u1-l5-a1", {
+        word: "Geld",
+        translation: "Money",
+        pronunciation: "gelt",
+      }),
+      vocabularyActivity("de-u1-l5-a2", {
+        word: "teuer",
+        translation: "Expensive",
+        pronunciation: "TOY-er",
+      }),
+      phraseActivity("de-u1-l5-a3", {
+        text: "Wie viel kostet das?",
+        translation: "How much is this?",
+      }),
+      phraseActivity("de-u1-l5-a4", {
+        text: "Ich möchte das kaufen.",
+        translation: "I would like to buy this.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging German teacher helping a complete beginner. Speak mostly in English, and introduce German words slowly with clear translations. Stay focused only on this lesson's goal: asking the price of something and saying you want to buy it. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage: "Gehen wir einkaufen! Let's practice shopping phrases in German. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/de-unit-1-lesson-5/200/200",
+  },
+  {
+    id: "de-unit-1-lesson-6",
+    unitId: "de-unit-1",
+    languageCode: "de",
+    order: 6,
+    title: "Family & Friends",
+    goal: "Talk about your family and friends in German.",
+    vocabulary: [
+      { word: "Mutter", translation: "Mother", pronunciation: "MOO-ter" },
+      { word: "Vater", translation: "Father", pronunciation: "FAH-ter" },
+      { word: "Freund", translation: "Friend", pronunciation: "froynt" },
+    ],
+    phrases: [
+      { text: "Das ist mein Freund.", translation: "This is my friend." },
+      { text: "Ich liebe meine Familie.", translation: "I love my family." },
+    ],
+    activities: [
+      vocabularyActivity("de-u1-l6-a1", {
+        word: "Mutter",
+        translation: "Mother",
+        pronunciation: "MOO-ter",
+      }),
+      vocabularyActivity("de-u1-l6-a2", {
+        word: "Freund",
+        translation: "Friend",
+        pronunciation: "froynt",
+      }),
+      phraseActivity("de-u1-l6-a3", {
+        text: "Das ist mein Freund.",
+        translation: "This is my friend.",
+      }),
+      phraseActivity("de-u1-l6-a4", {
+        text: "Ich liebe meine Familie.",
+        translation: "I love my family.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging German teacher helping a complete beginner. Speak mostly in English, and introduce German words slowly with clear translations. Stay focused only on this lesson's goal: talking about family and friends. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "Erzählen wir von der Familie! Let's learn how to talk about family and friends in German. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/de-unit-1-lesson-6/200/200",
+  },
+
+  // ---------------------------------------------------------------------
+  // Chinese
+  // ---------------------------------------------------------------------
+  {
+    id: "zh-unit-1-lesson-1",
+    unitId: "zh-unit-1",
+    languageCode: "zh",
+    order: 1,
+    title: "Greetings & Introductions",
+    goal: "Greet someone, say goodbye, and give your name in Chinese.",
+    vocabulary: [
+      { word: "你好", translation: "Hello", pronunciation: "nǐ hǎo" },
+      { word: "再见", translation: "Goodbye", pronunciation: "zài jiàn" },
+      { word: "谢谢", translation: "Thank you", pronunciation: "xiè xiè" },
+      { word: "名字", translation: "Name", pronunciation: "míng zi" },
+    ],
+    phrases: [
+      { text: "很高兴认识你。", translation: "Nice to meet you." },
+      { text: "我叫...", translation: "My name is..." },
+    ],
+    activities: [
+      vocabularyActivity("zh-u1-l1-a1", {
+        word: "你好",
+        translation: "Hello",
+        pronunciation: "nǐ hǎo",
+      }),
+      vocabularyActivity("zh-u1-l1-a2", {
+        word: "再见",
+        translation: "Goodbye",
+        pronunciation: "zài jiàn",
+      }),
+      phraseActivity("zh-u1-l1-a3", {
+        text: "很高兴认识你。",
+        translation: "Nice to meet you.",
+      }),
+      phraseActivity("zh-u1-l1-a4", {
+        text: "我叫...",
+        translation: "My name is...",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Mandarin Chinese teacher helping a complete beginner. Speak mostly in English, and introduce Chinese words slowly with clear translations. Stay focused only on this lesson's goal: greeting someone, saying goodbye, and giving your name. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "你好! I'm so happy to practice Chinese with you today. Let's start with something simple — how to say hello. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/zh-unit-1-lesson-1/200/200",
+  },
+  {
+    id: "zh-unit-1-lesson-2",
+    unitId: "zh-unit-1",
+    languageCode: "zh",
+    order: 2,
+    title: "Daily Life",
+    goal: "Talk about simple daily routines in Chinese.",
+    vocabulary: [
+      { word: "早上", translation: "Morning", pronunciation: "zǎo shang" },
+      { word: "水", translation: "Water", pronunciation: "shuǐ" },
+      { word: "睡觉", translation: "To sleep", pronunciation: "shuì jiào" },
+    ],
+    phrases: [
+      { text: "现在几点？", translation: "What time is it?" },
+      { text: "我很累。", translation: "I am tired." },
+    ],
+    activities: [
+      vocabularyActivity("zh-u1-l2-a1", {
+        word: "早上",
+        translation: "Morning",
+        pronunciation: "zǎo shang",
+      }),
+      vocabularyActivity("zh-u1-l2-a2", {
+        word: "水",
+        translation: "Water",
+        pronunciation: "shuǐ",
+      }),
+      phraseActivity("zh-u1-l2-a3", {
+        text: "现在几点？",
+        translation: "What time is it?",
+      }),
+      phraseActivity("zh-u1-l2-a4", {
+        text: "我很累。",
+        translation: "I am tired.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Mandarin Chinese teacher helping a complete beginner. Speak mostly in English, and introduce Chinese words slowly with clear translations. Stay focused only on this lesson's goal: talking about simple daily routines. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "很高兴又见面了! Now let's talk about daily life in Chinese — things like mornings and getting some rest. Ready to start?",
+    },
+    imageUrl: "https://picsum.photos/seed/zh-unit-1-lesson-2/200/200",
+  },
+  {
+    id: "zh-unit-1-lesson-3",
+    unitId: "zh-unit-1",
+    languageCode: "zh",
+    order: 3,
+    title: "At the Café",
+    goal: "Order a drink and ask for the bill in Chinese.",
+    vocabulary: [
+      { word: "咖啡", translation: "Coffee", pronunciation: "kā fēi" },
+      { word: "茶", translation: "Tea", pronunciation: "chá" },
+      { word: "菜单", translation: "Menu", pronunciation: "cài dān" },
+    ],
+    phrases: [
+      { text: "我要一杯咖啡。", translation: "I would like a coffee." },
+      { text: "请给我账单。", translation: "The bill, please." },
+    ],
+    activities: [
+      vocabularyActivity("zh-u1-l3-a1", {
+        word: "咖啡",
+        translation: "Coffee",
+        pronunciation: "kā fēi",
+      }),
+      vocabularyActivity("zh-u1-l3-a2", {
+        word: "菜单",
+        translation: "Menu",
+        pronunciation: "cài dān",
+      }),
+      phraseActivity("zh-u1-l3-a3", {
+        text: "我要一杯咖啡。",
+        translation: "I would like a coffee.",
+      }),
+      phraseActivity("zh-u1-l3-a4", {
+        text: "请给我账单。",
+        translation: "The bill, please.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Mandarin Chinese teacher helping a complete beginner. Speak mostly in English, and introduce Chinese words slowly with clear translations. Stay focused only on this lesson's goal: ordering a drink and asking for the bill at a café. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage:
+        "欢迎来到咖啡馆! Let's practice ordering something to drink in Chinese. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/zh-unit-1-lesson-3/200/200",
+  },
+  {
+    id: "zh-unit-1-lesson-4",
+    unitId: "zh-unit-1",
+    languageCode: "zh",
+    order: 4,
+    title: "Travel & Directions",
+    goal: "Ask for and understand simple directions in Chinese.",
+    vocabulary: [
+      { word: "左边", translation: "Left", pronunciation: "zuǒ biān" },
+      { word: "右边", translation: "Right", pronunciation: "yòu biān" },
+      { word: "机场", translation: "Airport", pronunciation: "jī chǎng" },
+    ],
+    phrases: [
+      { text: "...在哪里？", translation: "Where is the...?" },
+      { text: "直走。", translation: "Go straight ahead." },
+    ],
+    activities: [
+      vocabularyActivity("zh-u1-l4-a1", {
+        word: "左边",
+        translation: "Left",
+        pronunciation: "zuǒ biān",
+      }),
+      vocabularyActivity("zh-u1-l4-a2", {
+        word: "右边",
+        translation: "Right",
+        pronunciation: "yòu biān",
+      }),
+      phraseActivity("zh-u1-l4-a3", {
+        text: "...在哪里？",
+        translation: "Where is the...?",
+      }),
+      phraseActivity("zh-u1-l4-a4", {
+        text: "直走。",
+        translation: "Go straight ahead.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Mandarin Chinese teacher helping a complete beginner. Speak mostly in English, and introduce Chinese words slowly with clear translations. Stay focused only on this lesson's goal: asking for and understanding simple directions. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage: "我们来找路吧! Let's learn how to ask for directions in Chinese. Ready to give it a try?",
+    },
+    imageUrl: "https://picsum.photos/seed/zh-unit-1-lesson-4/200/200",
+  },
+  {
+    id: "zh-unit-1-lesson-5",
+    unitId: "zh-unit-1",
+    languageCode: "zh",
+    order: 5,
+    title: "Shopping",
+    goal: "Ask the price of something and say you want to buy it in Chinese.",
+    vocabulary: [
+      { word: "钱", translation: "Money", pronunciation: "qián" },
+      { word: "贵", translation: "Expensive", pronunciation: "guì" },
+      { word: "便宜", translation: "Cheap", pronunciation: "pián yi" },
+    ],
+    phrases: [
+      { text: "这个多少钱？", translation: "How much is this?" },
+      { text: "我想买这个。", translation: "I would like to buy this." },
+    ],
+    activities: [
+      vocabularyActivity("zh-u1-l5-a1", {
+        word: "钱",
+        translation: "Money",
+        pronunciation: "qián",
+      }),
+      vocabularyActivity("zh-u1-l5-a2", {
+        word: "贵",
+        translation: "Expensive",
+        pronunciation: "guì",
+      }),
+      phraseActivity("zh-u1-l5-a3", {
+        text: "这个多少钱？",
+        translation: "How much is this?",
+      }),
+      phraseActivity("zh-u1-l5-a4", {
+        text: "我想买这个。",
+        translation: "I would like to buy this.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Mandarin Chinese teacher helping a complete beginner. Speak mostly in English, and introduce Chinese words slowly with clear translations. Stay focused only on this lesson's goal: asking the price of something and saying you want to buy it. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage: "我们去购物吧! Let's practice shopping phrases in Chinese. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/zh-unit-1-lesson-5/200/200",
+  },
+  {
+    id: "zh-unit-1-lesson-6",
+    unitId: "zh-unit-1",
+    languageCode: "zh",
+    order: 6,
+    title: "Family & Friends",
+    goal: "Talk about your family and friends in Chinese.",
+    vocabulary: [
+      { word: "妈妈", translation: "Mother", pronunciation: "mā ma" },
+      { word: "爸爸", translation: "Father", pronunciation: "bà ba" },
+      { word: "朋友", translation: "Friend", pronunciation: "péng yǒu" },
+    ],
+    phrases: [
+      { text: "这是我的朋友。", translation: "This is my friend." },
+      { text: "我爱我的家人。", translation: "I love my family." },
+    ],
+    activities: [
+      vocabularyActivity("zh-u1-l6-a1", {
+        word: "妈妈",
+        translation: "Mother",
+        pronunciation: "mā ma",
+      }),
+      vocabularyActivity("zh-u1-l6-a2", {
+        word: "朋友",
+        translation: "Friend",
+        pronunciation: "péng yǒu",
+      }),
+      phraseActivity("zh-u1-l6-a3", {
+        text: "这是我的朋友。",
+        translation: "This is my friend.",
+      }),
+      phraseActivity("zh-u1-l6-a4", {
+        text: "我爱我的家人。",
+        translation: "I love my family.",
+      }),
+    ],
+    aiTeacher: {
+      systemPrompt:
+        "You are a warm, encouraging Mandarin Chinese teacher helping a complete beginner. Speak mostly in English, and introduce Chinese words slowly with clear translations. Stay focused only on this lesson's goal: talking about family and friends. Only use the vocabulary and phrases provided for this lesson. Ask the student to repeat words back to you and gently correct mistakes.",
+      kickoffMessage: "我们来聊聊家人吧! Let's learn how to talk about family and friends in Chinese. Ready?",
+    },
+    imageUrl: "https://picsum.photos/seed/zh-unit-1-lesson-6/200/200",
   },
 ];
 

@@ -11,7 +11,10 @@ export interface Unit {
   order: number;
   title: string;
   description: string;
+  imageUrl: string;
 }
+
+export type LessonStatus = "completed" | "in-progress" | "locked";
 
 export interface VocabularyItem {
   word: string;
@@ -52,4 +55,5 @@ export interface Lesson {
   phrases: Phrase[];
   activities: Activity[];
   aiTeacher: AITeacherPrompt;
+  imageUrl: string;
 }
