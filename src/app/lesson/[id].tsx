@@ -1,13 +1,16 @@
+import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
 import { getLanguageByCode } from "@/data/languages";
 import { getLessonById } from "@/data/lessons";
+import { type LessonCallStatus, useLessonCall } from "@/hooks/useLessonCall";
 import { colors } from "@/theme";
+import type { Lesson } from "@/types/learning";
 
 const STREAK_COUNT = 12;
 const CALL_BACKGROUND_URI = "https://picsum.photos/seed/ai-teacher-room/900/1200";
@@ -15,22 +18,37 @@ const SELF_PREVIEW_URI =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=260&fit=crop&crop=faces";
 
 // Mock speech feedback — there's no real speech recognition yet, this is
-// just static UI to match the design until the live AI teacher (prompts
-// 13-14) is wired up.
+// just static UI to match the design until the live AI teacher (prompt 14)
+// is wired up.
 const FEEDBACK = [
   { label: "Speaking", value: "Excellent", colorClassName: "text-success" },
   { label: "Pronunciation", value: "Great", colorClassName: "text-info" },
   { label: "Grammar", value: "Good", colorClassName: "text-primary-purple" },
 ];
 
+const CALL_STATUS_META: Record<
+  LessonCallStatus,
+  { label: string; dotClassName: string; textClassName: string }
+> = {
+  connecting: { label: "Connecting…", dotClassName: "bg-warning", textClassName: "text-warning" },
+  joining: { label: "Joining…", dotClassName: "bg-warning", textClassName: "text-warning" },
+  joined: { label: "Online", dotClassName: "bg-success", textClassName: "text-success" },
+  reconnecting: {
+    label: "Reconnecting…",
+    dotClassName: "bg-warning",
+    textClassName: "text-warning",
+  },
+  error: { label: "Call failed", dotClassName: "bg-error", textClassName: "text-error" },
+  ended: {
+    label: "Call ended",
+    dotClassName: "bg-text-secondary",
+    textClassName: "text-text-secondary",
+  },
+};
+
 export default function LessonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const lesson = getLessonById(id);
-  const language = lesson ? getLanguageByCode(lesson.languageCode) : undefined;
-
-  const [isCameraOn, setIsCameraOn] = useState(true);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [showSubtitles, setShowSubtitles] = useState(true);
 
   if (!lesson) {
     return (
@@ -42,7 +60,25 @@ export default function LessonDetail() {
     );
   }
 
+  return <LessonCallScreen lesson={lesson} />;
+}
+
+function LessonCallScreen({ lesson }: { lesson: Lesson }) {
+  const language = getLanguageByCode(lesson.languageCode);
+  const { user } = useUser();
+  const { status, errorMessage, isMicOn, toggleMic, endCall } = useLessonCall(lesson);
+
+  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [showSubtitles, setShowSubtitles] = useState(true);
+
   const practicePhrase = lesson.phrases[0];
+  const statusMeta = CALL_STATUS_META[status];
+  const isConnected = status === "joined" || status === "reconnecting";
+
+  const handleEndCall = async () => {
+    await endCall();
+    router.back();
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={["top"]}>
@@ -54,8 +90,10 @@ export default function LessonDetail() {
           <View className="gap-0.5">
             <Text className="font-poppins-semibold text-h3 text-text-primary">AI Teacher</Text>
             <View className="flex-row items-center gap-1.5">
-              <View className="h-2 w-2 rounded-full bg-success" />
-              <Text className="font-poppins-medium text-body-sm text-success">Online</Text>
+              <View className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`} />
+              <Text className={`font-poppins-medium text-body-sm ${statusMeta.textClassName}`}>
+                {statusMeta.label}
+              </Text>
             </View>
           </View>
         </View>
@@ -101,13 +139,45 @@ export default function LessonDetail() {
             resizeMode="contain"
           />
 
-          <Image
-            source={{ uri: SELF_PREVIEW_URI }}
-            className="absolute right-4 top-4 h-28 w-20 rounded-2xl border-2 border-white"
-            resizeMode="cover"
-          />
+          <View className="absolute right-4 top-4 items-center gap-1">
+            <Image
+              source={{ uri: user?.imageUrl || SELF_PREVIEW_URI }}
+              className="h-28 w-20 rounded-2xl border-2 border-white"
+              resizeMode="cover"
+            />
+            <View className="rounded-full bg-black/50 px-2 py-0.5">
+              <Text className="font-poppins-medium text-caption text-white">
+                {user?.firstName ?? "You"}
+              </Text>
+            </View>
+          </View>
 
-          {practicePhrase ? (
+          {(status === "connecting" || status === "joining" || status === "reconnecting") && (
+            <View className="absolute inset-0 items-center justify-center gap-3 bg-black/40">
+              <ActivityIndicator color="#FFFFFF" size="large" />
+              <Text className="font-poppins-medium text-body-md text-white">{statusMeta.label}</Text>
+            </View>
+          )}
+
+          {status === "error" && (
+            <View className="absolute inset-0 items-center justify-center gap-2 bg-black/60 px-8">
+              <Ionicons name="alert-circle" size={32} color={colors.semantic.error} />
+              <Text className="text-center font-poppins-semibold text-body-md text-white">
+                Could not connect the call
+              </Text>
+              {errorMessage ? (
+                <Text className="text-center body-small text-white">{errorMessage}</Text>
+              ) : null}
+            </View>
+          )}
+
+          {status === "ended" && (
+            <View className="absolute inset-0 items-center justify-center bg-black/60">
+              <Text className="font-poppins-semibold text-body-md text-white">Call ended</Text>
+            </View>
+          )}
+
+          {practicePhrase && status === "joined" ? (
             <View className="absolute bottom-4 left-4 right-4 flex-row items-start justify-between gap-3 rounded-2xl bg-white p-4">
               <View className="flex-1 gap-1">
                 <Text className="font-poppins-semibold text-body-lg text-text-primary">
@@ -140,9 +210,12 @@ export default function LessonDetail() {
 
           <View className="items-center gap-2">
             <TouchableOpacity
-              onPress={() => setIsMicOn((value) => !value)}
+              onPress={toggleMic}
+              disabled={!isConnected}
               activeOpacity={0.85}
-              className="h-14 w-14 items-center justify-center rounded-full border border-border bg-white"
+              className={`h-14 w-14 items-center justify-center rounded-full border border-border bg-white ${
+                isConnected ? "" : "opacity-40"
+              }`}
             >
               <Ionicons
                 name={isMicOn ? "mic" : "mic-off"}
@@ -170,7 +243,7 @@ export default function LessonDetail() {
 
           <View className="items-center gap-2">
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={handleEndCall}
               activeOpacity={0.85}
               className="h-14 w-14 items-center justify-center rounded-full bg-error"
             >
