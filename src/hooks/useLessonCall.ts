@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Lesson } from "@/types/learning";
 
+const LESSON_CALL_TYPE = "default";
+
 export type LessonCallStatus =
   | "connecting"
   | "joining"
@@ -36,6 +38,8 @@ interface UseLessonCallResult {
   status: LessonCallStatus;
   errorMessage?: string;
   errorStage?: LessonCallStage;
+  client?: StreamVideoClient;
+  call?: Call;
   isMicOn: boolean;
   toggleMic: () => void;
   endCall: () => Promise<void>;
@@ -223,54 +227,20 @@ async function fetchStreamAuth(getToken: () => Promise<string | null>): Promise<
   }
 }
 
-async function createLessonCall(
-  getToken: () => Promise<string | null>,
-  lessonId: string,
-): Promise<{ callId: string; callType: string }> {
-  const clerkToken = await getClerkSessionToken(getToken);
-
-  let res: Response;
-  try {
-    res = await fetch("/api/stream/call", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${clerkToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ lessonId }),
-    });
-  } catch (err) {
-    throw new LessonCallError(
-      "stream_call_request",
-      "Network request to /api/stream/call failed.",
-      { lessonId, route: "/api/stream/call" },
-      err,
-    );
+function hashString(value: string): string {
+  let hash = 5381;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 33) ^ value.charCodeAt(index);
   }
+  return (hash >>> 0).toString(36);
+}
 
-  if (!res.ok) {
-    const details = await readApiError(res, "/api/stream/call", "Could not start the lesson call.");
-    throw new LessonCallError(
-      "stream_call_request",
-      details.error ?? "Stream call API failed.",
-      { lessonId, ...apiErrorContext(details) },
-    );
-  }
-
-  try {
-    const body = (await res.json()) as { callId?: string; callType?: string };
-    if (!body.callId || !body.callType) {
-      throw new Error("Stream call response is missing callId or callType.");
-    }
-    return { callId: body.callId, callType: body.callType };
-  } catch (err) {
-    throw new LessonCallError(
-      "stream_call_response",
-      "Could not parse the /api/stream/call response.",
-      { lessonId, route: "/api/stream/call" },
-      err,
-    );
-  }
+function createLessonCall(lessonId: string, userId: string): { callId: string; callType: string } {
+  const safeLessonId = lessonId.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+  return {
+    callId: `lesson-${safeLessonId}-${hashString(userId)}`,
+    callType: LESSON_CALL_TYPE,
+  };
 }
 
 function toLessonCallError(err: unknown, fallbackStage: LessonCallStage, fallbackMessage: string): LessonCallError {
@@ -315,8 +285,15 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
   const [status, setStatus] = useState<LessonCallStatus>("connecting");
   const [errorMessage, setErrorMessage] = useState<string>();
   const [errorStage, setErrorStage] = useState<LessonCallStage>();
+  const [clientState, setClientState] = useState<StreamVideoClient>();
+  const [callState, setCallState] = useState<Call>();
   const [isMicOn, setIsMicOn] = useState(true);
   const callRef = useRef<Call | undefined>(undefined);
+  const getTokenRef = useRef(getToken);
+
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -333,7 +310,8 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
         setErrorMessage(undefined);
         setErrorStage(undefined);
 
-        const auth = await fetchStreamAuth(getToken);
+        const getCurrentToken = () => getTokenRef.current();
+        const auth = await fetchStreamAuth(getCurrentToken);
         if (cancelled) return;
         debugContext.streamUserId = auth.userId;
 
@@ -341,9 +319,10 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
           client = StreamVideoClient.getOrCreateInstance({
             apiKey: auth.apiKey,
             user: { id: auth.userId, name: auth.userName, image: auth.userImage },
+            token: auth.token,
             tokenProvider: async () => {
               try {
-                return (await fetchStreamAuth(getToken)).token;
+                return (await fetchStreamAuth(getCurrentToken)).token;
               } catch (err) {
                 const tokenError = toLessonCallError(
                   err,
@@ -355,14 +334,16 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
               }
             },
           });
+          setClientState(client);
         } catch (err) {
           throw new LessonCallError("stream_client_create", "Could not create the Stream video client.", {}, err);
         }
 
-        const { callId, callType } = await createLessonCall(getToken, lesson.id);
+        const { callId, callType } = createLessonCall(lesson.id, auth.userId);
         if (cancelled || !client) return;
         debugContext.callId = callId;
         debugContext.callType = callType;
+        debugContext.createOnJoin = true;
 
         let call: Call;
         try {
@@ -376,6 +357,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
           );
         }
         callRef.current = call;
+        setCallState(call);
 
         try {
           subscriptions.push(
@@ -400,7 +382,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
 
         setStatus("joining");
         try {
-          await call.join();
+          await call.join({ create: true });
         } catch (err) {
           throw new LessonCallError("stream_call_join", "Could not join the Stream call.", { callId, callType }, err);
         }
@@ -438,8 +420,10 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
       }
       client?.disconnectUser().catch((err) => console.error("Failed to disconnect Stream user", err));
       callRef.current = undefined;
+      setCallState(undefined);
+      setClientState(undefined);
     };
-  }, [lesson.id, isSignedIn, getToken]);
+  }, [lesson.id, isSignedIn]);
 
   const toggleMic = () => {
     callRef.current?.microphone.toggle().catch((err) => console.error("Failed to toggle microphone", err));
@@ -462,11 +446,13 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
       status: "error",
       errorMessage: "Sign in to start this lesson.",
       errorStage,
+      client: clientState,
+      call: callState,
       isMicOn,
       toggleMic,
       endCall,
     };
   }
 
-  return { status, errorMessage, errorStage, isMicOn, toggleMic, endCall };
+  return { status, errorMessage, errorStage, client: clientState, call: callState, isMicOn, toggleMic, endCall };
 }

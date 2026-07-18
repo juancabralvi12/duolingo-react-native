@@ -2,7 +2,7 @@ import { getLessonById } from "@/data/lessons";
 import { clerkAuthErrorResponse, requireClerkUserId } from "@/lib/clerkAuth";
 import { streamServerClient } from "@/lib/streamServer";
 
-const CALL_TYPE = "audio_room";
+const CALL_TYPE = "default";
 const ROUTE = "/api/stream/call";
 
 function hashString(value: string): string {

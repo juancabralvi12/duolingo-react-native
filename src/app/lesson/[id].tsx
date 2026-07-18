@@ -1,5 +1,6 @@
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
+import { CallContent, StreamCall, StreamVideo } from "@stream-io/video-react-native-sdk";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -66,7 +67,7 @@ export default function LessonDetail() {
 function LessonCallScreen({ lesson }: { lesson: Lesson }) {
   const language = getLanguageByCode(lesson.languageCode);
   const { user } = useUser();
-  const { status, errorMessage, isMicOn, toggleMic, endCall } = useLessonCall(lesson);
+  const { status, errorMessage, client, call, isMicOn, toggleMic, endCall } = useLessonCall(lesson);
 
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(true);
@@ -126,18 +127,30 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
         showsVerticalScrollIndicator={false}
       >
         <View className="relative h-[400px] overflow-hidden rounded-b-[32px] bg-text-primary">
-          <Image
-            source={{ uri: CALL_BACKGROUND_URI }}
-            className="absolute inset-0 h-full w-full"
-            resizeMode="cover"
-          />
+          {client && call ? (
+            <View className="absolute inset-0">
+              <StreamVideo client={client}>
+                <StreamCall call={call}>
+                  <CallContent />
+                </StreamCall>
+              </StreamVideo>
+            </View>
+          ) : (
+            <>
+              <Image
+                source={{ uri: CALL_BACKGROUND_URI }}
+                className="absolute inset-0 h-full w-full"
+                resizeMode="cover"
+              />
 
-          <Image
-            source={images.mascotAuth}
-            className="absolute bottom-24 self-center"
-            style={{ height: 220, width: 220, left: 0, right: 0 }}
-            resizeMode="contain"
-          />
+              <Image
+                source={images.mascotAuth}
+                className="absolute bottom-24 self-center"
+                style={{ height: 220, width: 220, left: 0, right: 0 }}
+                resizeMode="contain"
+              />
+            </>
+          )}
 
           <View className="absolute right-4 top-4 items-center gap-1">
             <Image
