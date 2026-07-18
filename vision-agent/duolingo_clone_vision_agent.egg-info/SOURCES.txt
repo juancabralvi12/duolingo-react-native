@@ -1,0 +1,8 @@
+README.md
+agent.py
+pyproject.toml
+duolingo_clone_vision_agent.egg-info/PKG-INFO
+duolingo_clone_vision_agent.egg-info/SOURCES.txt
+duolingo_clone_vision_agent.egg-info/dependency_links.txt
+duolingo_clone_vision_agent.egg-info/requires.txt
+duolingo_clone_vision_agent.egg-info/top_level.txt

@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: duolingo-clone-vision-agent
+Version: 0.1.0
+Summary: Voice-only AI language teacher for the Duolingo clone Expo app.
+Requires-Python: <3.14,>=3.10
+Requires-Dist: python-dotenv>=1.2.2
+Requires-Dist: vision-agents==0.6.7
+Requires-Dist: vision-agents-plugins-getstream==0.6.7
+Requires-Dist: vision-agents-plugins-openai==0.6.7
