@@ -9,7 +9,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "@/constants/images";
 import { getLanguageByCode } from "@/data/languages";
 import { getLessonById } from "@/data/lessons";
-import { type LessonCallStatus, useLessonCall } from "@/hooks/useLessonCall";
+import {
+  type AgentConnectionStatus,
+  type LessonCallStatus,
+  useLessonCall,
+} from "@/hooks/useLessonCall";
 import { colors } from "@/theme";
 import type { Lesson } from "@/types/learning";
 
@@ -47,6 +51,32 @@ const CALL_STATUS_META: Record<
   },
 };
 
+const AGENT_STATUS_META: Record<
+  AgentConnectionStatus,
+  { label: string; dotClassName: string; textClassName: string }
+> = {
+  idle: {
+    label: "Teacher idle",
+    dotClassName: "bg-text-secondary",
+    textClassName: "text-text-secondary",
+  },
+  connecting: {
+    label: "Teacher connecting",
+    dotClassName: "bg-warning",
+    textClassName: "text-warning",
+  },
+  connected: {
+    label: "Teacher connected",
+    dotClassName: "bg-success",
+    textClassName: "text-success",
+  },
+  failed: {
+    label: "Teacher failed",
+    dotClassName: "bg-error",
+    textClassName: "text-error",
+  },
+};
+
 export default function LessonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const lesson = getLessonById(id);
@@ -67,13 +97,24 @@ export default function LessonDetail() {
 function LessonCallScreen({ lesson }: { lesson: Lesson }) {
   const language = getLanguageByCode(lesson.languageCode);
   const { user } = useUser();
-  const { status, errorMessage, client, call, isMicOn, toggleMic, endCall } = useLessonCall(lesson);
+  const {
+    status,
+    errorMessage,
+    agentStatus,
+    agentErrorMessage,
+    client,
+    call,
+    isMicOn,
+    toggleMic,
+    endCall,
+  } = useLessonCall(lesson);
 
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(true);
 
   const practicePhrase = lesson.phrases[0];
   const statusMeta = CALL_STATUS_META[status];
+  const agentMeta = AGENT_STATUS_META[agentStatus];
   const isConnected = status === "joined" || status === "reconnecting";
 
   const handleEndCall = async () => {
@@ -94,6 +135,12 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
               <View className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`} />
               <Text className={`font-poppins-medium text-body-sm ${statusMeta.textClassName}`}>
                 {statusMeta.label}
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-1.5">
+              <View className={`h-2 w-2 rounded-full ${agentMeta.dotClassName}`} />
+              <Text className={`font-poppins-medium text-caption ${agentMeta.textClassName}`}>
+                {agentMeta.label}
               </Text>
             </View>
           </View>
@@ -119,6 +166,11 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
           {language?.name ?? "Lesson"} • {lesson.title}
         </Text>
         <Text className="body-small">{lesson.goal}</Text>
+        {agentStatus === "failed" ? (
+          <Text className="font-poppins-medium text-caption text-error" numberOfLines={2}>
+            {agentErrorMessage ?? "The AI teacher could not join."}
+          </Text>
+        ) : null}
       </View>
 
       <ScrollView

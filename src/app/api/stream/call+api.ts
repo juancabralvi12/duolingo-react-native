@@ -1,9 +1,12 @@
 import { getLessonById } from "@/data/lessons";
+import { getLanguageByCode } from "@/data/languages";
 import { clerkAuthErrorResponse, requireClerkUserId } from "@/lib/clerkAuth";
 import { streamServerClient } from "@/lib/streamServer";
 
-const CALL_TYPE = "default";
+const CALL_TYPE = "audio_room";
 const ROUTE = "/api/stream/call";
+const AGENT_USER_ID = "ai-language-teacher";
+const AGENT_USER_NAME = "LinguaCoach";
 
 function hashString(value: string): string {
   let hash = 5381;
@@ -19,6 +22,22 @@ function toCallId(lessonId: string, userId: string): string {
   const uniqueSuffix = Date.now().toString(36);
 
   return `lesson-${safeLessonId}-${userHash}-${uniqueSuffix}`;
+}
+
+function toLessonCustomData(lesson: NonNullable<ReturnType<typeof getLessonById>>) {
+  const language = getLanguageByCode(lesson.languageCode);
+
+  return {
+    lessonId: lesson.id,
+    lessonTitle: lesson.title,
+    lessonGoal: lesson.goal,
+    languageCode: lesson.languageCode,
+    languageName: language?.name ?? lesson.languageCode,
+    languageNativeName: language?.nativeName,
+    vocabulary: lesson.vocabulary,
+    phrases: lesson.phrases,
+    aiTeacher: lesson.aiTeacher,
+  };
 }
 
 function getErrorStatus(err: unknown): number | undefined {
@@ -145,26 +164,41 @@ export async function POST(request: Request) {
     // require the user to already exist in Stream. The RN client's own
     // connectUser() upsert may not have landed yet, so upsert explicitly.
     try {
-      await streamServerClient.upsertUsers([{ id: userId }]);
+      await streamServerClient.upsertUsers([
+        { id: userId },
+        { id: AGENT_USER_ID, name: AGENT_USER_NAME },
+      ]);
     } catch (err) {
       return routeErrorResponse({ callId, err, lessonId: lesson.id, stage: "stream_user_upsert", userId });
     }
 
     const call = streamServerClient.video.call(CALL_TYPE, callId);
+    const custom = toLessonCustomData(lesson);
+
     try {
       await call.getOrCreate({
         data: {
           created_by_id: userId,
-          members: [{ user_id: userId, role: "host" }],
-          custom: {
-            lessonId: lesson.id,
-            lessonTitle: lesson.title,
-            languageCode: lesson.languageCode,
-          },
+          members: [
+            { user_id: userId, role: "host" },
+            { user_id: AGENT_USER_ID, role: "admin" },
+          ],
+          custom,
         },
       });
     } catch (err) {
       return routeErrorResponse({ callId, err, lessonId: lesson.id, stage: "stream_call_get_or_create", userId });
+    }
+
+    try {
+      await call.update({
+        custom,
+      });
+      await call.updateCallMembers({
+        update_members: [{ user_id: AGENT_USER_ID, role: "admin" }],
+      });
+    } catch (err) {
+      return routeErrorResponse({ callId, err, lessonId: lesson.id, stage: "stream_call_update_agent", userId });
     }
 
     if (call.data?.backstage) {

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 from vision_agents.core import Agent, AgentLauncher, Runner, User
+from vision_agents.core.instructions import Instructions
 from vision_agents.plugins import getstream, openai
 
 
@@ -42,16 +45,81 @@ def require_environment() -> None:
         raise RuntimeError(f"Missing required environment variables: {names}")
 
 
-def build_teacher_instructions(language: str = DEFAULT_TEACHING_LANGUAGE) -> str:
+def read_text(mapping: Mapping[str, Any], key: str, default: str = "") -> str:
+    value = mapping.get(key)
+    return value if isinstance(value, str) else default
+
+
+def read_mapping(mapping: Mapping[str, Any], key: str) -> Mapping[str, Any]:
+    value = mapping.get(key)
+    return value if isinstance(value, Mapping) else {}
+
+
+def read_mapping_list(mapping: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]:
+    value = mapping.get(key)
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, Mapping)]
+
+
+def format_vocabulary(custom: Mapping[str, Any]) -> str:
+    lines: list[str] = []
+    for item in read_mapping_list(custom, "vocabulary"):
+        word = read_text(item, "word")
+        translation = read_text(item, "translation")
+        pronunciation = read_text(item, "pronunciation")
+        if not word and not translation:
+            continue
+        details = f"{word}: {translation}".strip(": ")
+        if pronunciation:
+            details = f"{details} (pronounced {pronunciation})"
+        lines.append(f"- {details}")
+    return "\n".join(lines)
+
+
+def format_phrases(custom: Mapping[str, Any]) -> str:
+    lines: list[str] = []
+    for item in read_mapping_list(custom, "phrases"):
+        text = read_text(item, "text")
+        translation = read_text(item, "translation")
+        if not text and not translation:
+            continue
+        lines.append(f"- {text}: {translation}".strip(": "))
+    return "\n".join(lines)
+
+
+def build_teacher_instructions(custom: Mapping[str, Any] | None = None) -> str:
+    custom = custom or {}
+    ai_teacher = read_mapping(custom, "aiTeacher")
+
+    language = (
+        read_text(custom, "languageName")
+        or read_text(custom, "languageCode")
+        or DEFAULT_TEACHING_LANGUAGE
+    )
+    native_name = read_text(custom, "languageNativeName")
+    lesson_title = read_text(custom, "lessonTitle", "the selected lesson")
+    lesson_goal = read_text(custom, "lessonGoal")
+    teacher_prompt = read_text(ai_teacher, "systemPrompt")
+    vocabulary = format_vocabulary(custom)
+    phrases = format_phrases(custom)
+
+    language_label = f"{language} ({native_name})" if native_name else language
+
     return (
         "You are the AI language teacher for a Duolingo-inspired mobile app. "
         "You are voice only: speak naturally, briefly, and conversationally. "
         "Always speak English as the teaching language. "
-        f"The learner is studying {language}; teach that language through English. "
+        f"The learner is studying {language_label}; teach that language through English. "
         "Introduce target-language words slowly, translate them right away, and ask the learner to repeat. "
         "Keep each turn short enough for a beginner to answer out loud. "
         "Be warm, energetic, and encouraging. "
-        "If lesson-specific context is not available yet, ask what they would like to practice and start with a simple greeting."
+        f"The current lesson is {lesson_title}. "
+        f"The lesson goal is: {lesson_goal or 'practice beginner speaking.'} "
+        "Stay focused on the lesson data below and do not jump ahead. "
+        f"Lesson vocabulary:\n{vocabulary or '- No vocabulary was provided.'}\n"
+        f"Lesson phrases:\n{phrases or '- No phrases were provided.'}\n"
+        f"Lesson-specific teacher prompt:\n{teacher_prompt or 'No additional teacher prompt was provided.'}"
     )
 
 
@@ -65,7 +133,7 @@ async def create_agent(**kwargs: object) -> Agent:
     return Agent(
         edge=getstream.Edge(),
         agent_user=User(name=AGENT_NAME, id=AGENT_USER_ID),
-        instructions=build_teacher_instructions(language),
+        instructions=build_teacher_instructions({"languageName": language}),
         llm=openai.Realtime(
             model=os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime-2"),
             voice=os.getenv("OPENAI_REALTIME_VOICE", "marin"),
@@ -74,16 +142,40 @@ async def create_agent(**kwargs: object) -> Agent:
     )
 
 
+async def read_call_custom(call: object) -> dict[str, Any]:
+    try:
+        await call.get()  # type: ignore[attr-defined]
+    except Exception as exc:
+        print(f"Warning: could not read Stream call custom data: {exc}")
+
+    custom_data = getattr(call, "custom_data", {})
+    return custom_data if isinstance(custom_data, dict) else {}
+
+
+def build_kickoff_message(custom: Mapping[str, Any]) -> str:
+    ai_teacher = read_mapping(custom, "aiTeacher")
+    kickoff = read_text(ai_teacher, "kickoffMessage")
+    language = read_text(custom, "languageName") or DEFAULT_TEACHING_LANGUAGE
+    lesson_title = read_text(custom, "lessonTitle", "this lesson")
+    lesson_goal = read_text(custom, "lessonGoal")
+
+    if kickoff:
+        return kickoff
+
+    return (
+        f"Greet the learner in English, introduce yourself as their AI {language} teacher, "
+        f"say you are starting {lesson_title}, and invite them to practice. "
+        f"Use this goal: {lesson_goal or 'help the learner practice speaking out loud.'}"
+    )
+
+
 async def join_call(agent: Agent, call_type: str, call_id: str, **kwargs: object) -> None:
     call = await agent.create_call(call_type, call_id)
+    custom = await read_call_custom(call)
+    agent.instructions = Instructions(input_text=build_teacher_instructions(custom))
 
     async with agent.join(call):
-        await agent.simple_response(
-            text=(
-                "Greet the learner in English, introduce yourself as their AI language teacher, "
-                "and ask them to say one simple word in the language they selected."
-            )
-        )
+        await agent.simple_response(text=build_kickoff_message(custom))
         await agent.finish()
 
 
