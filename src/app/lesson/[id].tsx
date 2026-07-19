@@ -106,10 +106,11 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
     call,
     isMicOn,
     toggleMic,
+    isCameraOn,
+    toggleCamera,
     endCall,
   } = useLessonCall(lesson);
 
-  const [isCameraOn, setIsCameraOn] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(true);
 
   const practicePhrase = lesson.phrases[0];
@@ -183,7 +184,7 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
             <View className="absolute inset-0">
               <StreamVideo client={client}>
                 <StreamCall call={call}>
-                  <CallContent />
+                  <CallContent CallControls={null} />
                 </StreamCall>
               </StreamVideo>
             </View>
@@ -260,9 +261,12 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
         <View className="flex-row items-center justify-around px-6">
           <View className="items-center gap-2">
             <TouchableOpacity
-              onPress={() => setIsCameraOn((value) => !value)}
+              onPress={toggleCamera}
+              disabled={!isConnected}
               activeOpacity={0.85}
-              className="h-14 w-14 items-center justify-center rounded-full border border-border bg-white"
+              className={`h-14 w-14 items-center justify-center rounded-full border border-border bg-white ${
+                isConnected ? "" : "opacity-40"
+              }`}
             >
               <Ionicons
                 name={isCameraOn ? "videocam" : "videocam-off"}

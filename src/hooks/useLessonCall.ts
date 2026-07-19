@@ -62,6 +62,8 @@ interface UseLessonCallResult {
   call?: Call;
   isMicOn: boolean;
   toggleMic: () => void;
+  isCameraOn: boolean;
+  toggleCamera: () => void;
   endCall: () => Promise<void>;
 }
 
@@ -428,6 +430,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
   const [clientState, setClientState] = useState<StreamVideoClient>();
   const [callState, setCallState] = useState<Call>();
   const [isMicOn, setIsMicOn] = useState(true);
+  const [isCameraOn, setIsCameraOn] = useState(true);
   const callRef = useRef<Call | undefined>(undefined);
   const agentSessionRef = useRef<VisionAgentSession | undefined>(undefined);
   const getTokenRef = useRef(getToken);
@@ -515,6 +518,11 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
               setIsMicOn(deviceStatus === "enabled");
             }),
           );
+          subscriptions.push(
+            call.camera.state.status$.subscribe((deviceStatus) => {
+              setIsCameraOn(deviceStatus === "enabled");
+            }),
+          );
         } catch (err) {
           throw new LessonCallError(
             "stream_call_subscription",
@@ -546,6 +554,19 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
             { callId: callDetails.callId, callType: callDetails.callType },
             err,
           );
+        }
+
+        try {
+          await call.camera.enable();
+        } catch (err) {
+          // Camera is a nice-to-have for this voice-first lesson — a missing or
+          // denied camera (common on simulators) shouldn't fail the whole call.
+          // Leave it off; the user can retry from the Camera button.
+          console.warn("Could not enable the camera for the lesson call", {
+            callId: callDetails.callId,
+            callType: callDetails.callType,
+            err,
+          });
         }
 
         setAgentStatus("connecting");
@@ -616,6 +637,10 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
     callRef.current?.microphone.toggle().catch((err) => console.error("Failed to toggle microphone", err));
   };
 
+  const toggleCamera = () => {
+    callRef.current?.camera.toggle().catch((err) => console.error("Failed to toggle camera", err));
+  };
+
   const endCall = async () => {
     const agentSession = agentSessionRef.current;
     if (agentSession) {
@@ -653,6 +678,8 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
       call: callState,
       isMicOn,
       toggleMic,
+      isCameraOn,
+      toggleCamera,
       endCall,
     };
   }
@@ -667,6 +694,8 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
     call: callState,
     isMicOn,
     toggleMic,
+    isCameraOn,
+    toggleCamera,
     endCall,
   };
 }

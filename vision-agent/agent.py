@@ -6,6 +6,13 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+from openai.types.realtime import (
+    AudioTranscriptionParam,
+    RealtimeAudioConfigInputParam,
+    RealtimeAudioConfigParam,
+    RealtimeSessionCreateRequestParam,
+)
+from openai.types.realtime.realtime_audio_input_turn_detection_param import ServerVad
 from vision_agents.core import Agent, AgentLauncher, Runner, User
 from vision_agents.core.instructions import Instructions
 from vision_agents.plugins import getstream, openai
@@ -17,6 +24,29 @@ REPO_ROOT = SERVICE_DIR.parent
 AGENT_NAME = "LinguaCoach"
 AGENT_USER_ID = "ai-language-teacher"
 DEFAULT_TEACHING_LANGUAGE = "the selected language"
+
+def build_realtime_session_config() -> RealtimeSessionCreateRequestParam:
+    """Fresh session config per agent instance — Realtime.__init__ mutates it in place.
+
+    The default semantic VAD is too eager to treat a stray noise or breath as a
+    full turn and respond to it. server_vad with a raised threshold requires
+    actual voiced audio above that level before it counts as speech at all.
+    """
+    return RealtimeSessionCreateRequestParam(
+        type="realtime",
+        audio=RealtimeAudioConfigParam(
+            input=RealtimeAudioConfigInputParam(
+                transcription=AudioTranscriptionParam(model="gpt-4o-mini-transcribe"),
+                turn_detection=ServerVad(
+                    type="server_vad",
+                    threshold=0.6,
+                    prefix_padding_ms=300,
+                    silence_duration_ms=600,
+                    create_response=True,
+                ),
+            )
+        ),
+    )
 
 
 def load_environment() -> None:
@@ -139,6 +169,7 @@ async def create_agent(**kwargs: object) -> Agent:
         llm=openai.Realtime(
             model=os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime-2"),
             voice=os.getenv("OPENAI_REALTIME_VOICE", "marin"),
+            realtime_session=build_realtime_session_config(),
             send_video=False,
         ),
     )
