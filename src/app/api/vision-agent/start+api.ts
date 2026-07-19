@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
       return Response.json(
         {
-          error: "Vision Agent server could not start the teacher session.",
+          error: "Vision Agent server could not start the vocal coach session.",
           code: "vision_agent_start_failed",
           source: "vision_agent",
           stage: "agent_start",

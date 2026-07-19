@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { LanguageCard } from "@/components/LanguageCard";
 import { images } from "@/constants/images";
-import { languages } from "@/data/languages";
+import { getLanguageByCode, languages } from "@/data/languages";
 import { useLanguageStore } from "@/store/languageStore";
 import { colors } from "@/theme";
 
@@ -14,16 +14,19 @@ export default function LanguageSelection() {
   const selectedLanguageCode = useLanguageStore((state) => state.selectedLanguageCode);
   const setSelectedLanguageCode = useLanguageStore((state) => state.setSelectedLanguageCode);
   const [query, setQuery] = useState("");
-  const [selectedCode, setSelectedCode] = useState(selectedLanguageCode ?? languages[0]?.code);
+  const initialSelectedCode = selectedLanguageCode && getLanguageByCode(selectedLanguageCode)
+    ? selectedLanguageCode
+    : languages[0]?.code;
+  const [selectedCode, setSelectedCode] = useState(initialSelectedCode);
 
-  const filteredLanguages = useMemo(() => {
+  const filteredTracks = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return languages;
 
     return languages.filter(
-      (language) =>
-        language.name.toLowerCase().includes(normalizedQuery) ||
-        language.nativeName.toLowerCase().includes(normalizedQuery),
+      (track) =>
+        track.name.toLowerCase().includes(normalizedQuery) ||
+        track.nativeName.toLowerCase().includes(normalizedQuery),
     );
   }, [query]);
 
@@ -33,7 +36,7 @@ export default function LanguageSelection() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="chevron-back" size={26} color={colors.neutral.textPrimary} />
         </TouchableOpacity>
-        <Text className="heading-3 flex-1 text-center">Choose a language</Text>
+        <Text className="heading-3 flex-1 text-center">Choose a vocal track</Text>
         <View className="w-[26px]" />
       </View>
 
@@ -47,16 +50,16 @@ export default function LanguageSelection() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search languages"
+            placeholder="Search vocal tracks"
             placeholderTextColor={colors.neutral.textSecondary}
             className="body-medium flex-1"
           />
         </View>
 
-        <Text className="font-poppins-semibold text-body-sm text-text-secondary">Popular</Text>
+        <Text className="font-poppins-semibold text-body-sm text-text-secondary">Recommended</Text>
 
         <View className="gap-3">
-          {filteredLanguages.map((language) => (
+          {filteredTracks.map((language) => (
             <LanguageCard
               key={language.code}
               language={language}

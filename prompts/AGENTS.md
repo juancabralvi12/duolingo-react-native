@@ -8,16 +8,17 @@ You should think like a senior mobile developer, but explain and implement like 
 
 ## Project Overview
 
-We are building a Duolingo-inspired AI language learning mobile app using Expo.
+We are building a Duolingo-inspired AI vocal training mobile app using Expo.
 
-The app teaches users languages through interactive lessons that may include:
+The app teaches users how to sing through interactive vocal lessons that may include:
 
-- video-based AI teacher lessons
-- audio lessons
-- chat-based AI tutor lessons
-- vocabulary review
+- voice-based AI vocal coach lessons
+- note matching and pitch correction
+- breath support and warmup drills
+- short song-piece practice
+- ear training and harmony practice
 - local XP and lesson completion
-- language selection
+- vocal track selection
 - beautiful mobile-first UI inspired by playful learning apps
 
 This is primarily a learning project. The goal is to teach developers how to build a modern AI-powered Expo app feature by feature.
@@ -36,8 +37,8 @@ Use the following stack:
 - Zustand
 - AsyncStorage
 - Clerk for authentication
-- Stream / GetStream for video and real-time communication
-- Stream Vision Agents for AI video teacher capability
+- Stream / GetStream for voice-first real-time communication
+- Stream Vision Agents for AI vocal coach capability
 - Server-side API routes or backend functions for secrets, tokens, and AI calls
 
 Do not introduce new major libraries unless there is a strong reason.
@@ -84,3 +85,14 @@ Do not install or use new libraries without user approval.
 ## Architecture Guidelines
 
 Use this structure unless there is a strong reason to change it:
+
+---
+
+## Vocalingo Delta
+
+- This project is now a singing lesson app, not a spoken-language learning app.
+- User-facing UI should say vocal track, singing lesson, vocal drill, AI vocal coach, captions, and practice.
+- Lessons should teach note matching, pitch correction, breath support, warmups, ear training, short song phrases, timing, tone, and harmony.
+- AI voice sessions should ask the learner to sing a note, pattern, warmup, or short piece, then give one specific correction.
+- Keep existing tutorial-friendly internal names such as `languages.ts`, `languageCode`, and `useLanguageStore` when renaming them would create unnecessary churn.
+- Never expose secrets in the app, and never encourage singing through throat pain.

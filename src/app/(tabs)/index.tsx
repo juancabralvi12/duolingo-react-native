@@ -30,7 +30,7 @@ export default function Home() {
     ? getUnitsByLanguage(selectedLanguageCode)[0]
     : undefined;
   const currentLesson = currentUnit ? getLessonsByUnit(currentUnit.id)[0] : undefined;
-  const greetingWord = currentLesson?.vocabulary[0]?.word ?? "Hello";
+  const greetingWord = currentLesson?.vocabulary[0]?.word ?? "Warm up";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -51,7 +51,7 @@ export default function Home() {
               </View>
             ) : null}
             <Text className="font-poppins-semibold text-h4 text-text-primary">
-              {greetingWord}, {user?.firstName ?? "there"}! 👋
+              {greetingWord}, {user?.firstName ?? "there"}!
             </Text>
           </View>
 
@@ -70,8 +70,8 @@ export default function Home() {
 
         {language && currentUnit ? (
           <ContinueLearningCard
-            languageName={language.name}
-            levelLabel={`A1 • Unit ${currentUnit.order}`}
+            trackName={language.name}
+            levelLabel={`Level 1 • Unit ${currentUnit.order}`}
             onPress={() => router.push("/learn")}
           />
         ) : null}
@@ -98,28 +98,28 @@ export default function Home() {
               <PlanItemRow
                 icon="headset"
                 iconBackgroundClassName="bg-primary-purple"
-                title="AI Conversation"
+                title="Coach session"
                 subtitle={currentLesson.goal}
                 completed={false}
               />
               <PlanItemRow
-                icon="chatbubble-ellipses"
+                icon="musical-notes"
                 iconBackgroundClassName="bg-error"
-                title="New words"
-                subtitle={`${currentLesson.vocabulary.length} words`}
+                title="Vocal drills"
+                subtitle={`${currentLesson.vocabulary.length} exercises`}
                 completed={false}
               />
             </View>
           ) : (
             <Text className="body-small">
-              Lessons for {language?.name ?? "this language"} are coming soon.
+              Lessons for {language?.name ?? "this vocal track"} are coming soon.
             </Text>
           )}
         </View>
 
         <NextUpCard
-          title="AI Video Call"
-          subtitle="Practice speaking"
+          title="AI Voice Coach"
+          subtitle="Practice singing"
           avatarUri={AI_TEACHER_AVATAR_URI}
           onPress={() => router.push("/ai-teacher")}
         />

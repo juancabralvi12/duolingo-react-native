@@ -1,12 +1,16 @@
 Read AGENTS.md first and follow it strictly.
 
-Study the existing auth screens and current mocked auth flow, then replace the mock behavior with real JavaScript Native Sign in Clerk authentication by following the Clerk documentation provided below. 
+Study the existing auth screens and current mocked auth flow, then replace the mock behavior with real JavaScript Native Sign in Clerk authentication by following the Clerk documentation provided below.
 
-Keep the existing UI and navigation flow intact. Implement email-based Sign Up, Sign In, social auth where supported, and verification code handling through Clerk. 
+Keep the existing UI and navigation flow intact. Implement email-based Sign Up, Sign In, social auth where supported, and verification code handling through Clerk.
 
-After successful verification/authentication, navigate to the home route (/). If not authenticated, show onboarding route (/onboarding(. If authenticated, show home route (/). 
+After successful verification/authentication, navigate to the home route (/). If not authenticated, show onboarding route (/onboarding). If authenticated but no vocal track has been selected, show the vocal track selection route. If authenticated with a selected vocal track, show home route (/).
 
-Do not change the screen design. If there is any need, ask me before implementation
+Required delta for Vocalingo:
+
+- User-facing auth copy should refer to singing practice and vocal coaching.
+- Do not build custom auth; Clerk remains the auth provider.
+- Do not change the screen design unless required, and ask before making visual changes.
 
 ---
 

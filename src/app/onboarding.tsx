@@ -16,30 +16,30 @@ export default function Onboarding() {
             resizeMode="contain"
           />
           <Text className="font-poppins-bold text-h2 text-text-primary">
-            muolingo
+            vocalingo
           </Text>
         </View>
 
         <View className="gap-3">
           <Text className="heading-1">
-            Your AI language{"\n"}
-            <Text className="text-primary-purple">teacher.</Text>
+            Your AI vocal{"\n"}
+            <Text className="text-primary-purple">coach.</Text>
           </Text>
           <Text className="body-medium text-text-secondary">
-            Real conversations, personalized lessons, anytime, anywhere.
+            Practice notes, warmups, and songs with real-time coaching.
           </Text>
         </View>
 
         <View className="items-center justify-center">
           <View className="relative items-center justify-center">
             <View className="absolute -left-4 top-0 rounded-2xl rounded-bl-sm bg-surface px-4 py-2">
-              <Text className="body-medium text-text-primary">Hello!</Text>
+              <Text className="body-medium text-text-primary">Sing C</Text>
             </View>
             <View className="absolute -right-2 -top-4 rounded-2xl rounded-br-sm bg-primary-purple/10 px-4 py-2">
-              <Text className="body-medium text-primary-purple">¡Hola!</Text>
+              <Text className="body-medium text-primary-purple">Try ah</Text>
             </View>
             <View className="absolute -right-6 top-16 rounded-2xl rounded-br-sm bg-error/10 px-4 py-2">
-              <Text className="body-medium text-error">你好!</Text>
+              <Text className="body-medium text-error">Great pitch</Text>
             </View>
             <Image
               source={images.mascotWelcome}

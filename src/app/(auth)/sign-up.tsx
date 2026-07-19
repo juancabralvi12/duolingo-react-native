@@ -5,7 +5,7 @@ export default function SignUp() {
     <AuthScreen
       mode="sign-up"
       title="Create your account"
-      subtitle="Start your language journey today ✨"
+      subtitle="Start your singing journey today"
       submitLabel="Sign Up"
       footerText="Already have an account?"
       footerLinkText="Log in"

@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "duolingo-clone",
+    "name": "vocalingo",
     "slug": "jsm-testing",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "duolingoclone",
+    "scheme": "vocalingo",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.juancabral12.jsm-testing",
       "infoPlist": {
-        "NSCameraUsageDescription": "$(PRODUCT_NAME) requires camera access for your AI teacher calls",
-        "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) requires microphone access so you can speak during your AI teacher calls"
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) can use camera access for optional coach call previews",
+        "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) requires microphone access so you can sing during AI vocal coach lessons"
       }
     },
     "android": {

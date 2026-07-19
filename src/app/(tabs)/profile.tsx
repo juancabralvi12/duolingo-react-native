@@ -16,7 +16,7 @@ export default function Profile() {
         <View className="gap-2">
           <Text className="heading-2 text-center">Profile</Text>
           <Text className="body-medium text-center text-text-secondary">
-            Your profile settings are coming soon.
+            Your vocal goals and practice settings are coming soon.
           </Text>
         </View>
 

@@ -1,0 +1,4 @@
+python-dotenv>=1.2.2
+vision-agents==0.6.7
+vision-agents-plugins-getstream==0.6.7
+vision-agents-plugins-openai==0.6.7

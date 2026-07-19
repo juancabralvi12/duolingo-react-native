@@ -1,5 +1,5 @@
 import { PlaceholderScreen } from "@/components/PlaceholderScreen";
 
 export default function Chat() {
-  return <PlaceholderScreen title="Chat" subtitle="AI chat tutoring is coming soon." />;
+  return <PlaceholderScreen title="Practice Chat" subtitle="Ask your coach about notes, warmups, and songs." />;
 }

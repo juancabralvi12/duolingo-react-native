@@ -21,9 +21,9 @@ from vision_agents.plugins import getstream, openai
 SERVICE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SERVICE_DIR.parent
 
-AGENT_NAME = "LinguaCoach"
-AGENT_USER_ID = "ai-language-teacher"
-DEFAULT_TEACHING_LANGUAGE = "the selected language"
+AGENT_NAME = "Vocalingo Coach"
+AGENT_USER_ID = "ai-vocal-coach"
+DEFAULT_VOCAL_TRACK = "the selected vocal track"
 
 def build_realtime_session_config() -> RealtimeSessionCreateRequestParam:
     """Fresh session config per agent instance — Realtime.__init__ mutates it in place.
@@ -92,7 +92,7 @@ def read_mapping_list(mapping: Mapping[str, Any], key: str) -> list[Mapping[str,
     return [item for item in value if isinstance(item, Mapping)]
 
 
-def format_vocabulary(custom: Mapping[str, Any]) -> str:
+def format_vocal_drills(custom: Mapping[str, Any]) -> str:
     lines: list[str] = []
     for item in read_mapping_list(custom, "vocabulary"):
         word = read_text(item, "word")
@@ -102,7 +102,7 @@ def format_vocabulary(custom: Mapping[str, Any]) -> str:
             continue
         details = f"{word}: {translation}".strip(": ")
         if pronunciation:
-            details = f"{details} (pronounced {pronunciation})"
+            details = f"{details} (cue: {pronunciation})"
         lines.append(f"- {details}")
     return "\n".join(lines)
 
@@ -122,50 +122,54 @@ def build_teacher_instructions(custom: Mapping[str, Any] | None = None) -> str:
     custom = custom or {}
     ai_teacher = read_mapping(custom, "aiTeacher")
 
-    language = (
-        read_text(custom, "languageName")
+    track = (
+        read_text(custom, "trackName")
+        or read_text(custom, "languageName")
+        or read_text(custom, "trackCode")
         or read_text(custom, "languageCode")
-        or DEFAULT_TEACHING_LANGUAGE
+        or DEFAULT_VOCAL_TRACK
     )
-    native_name = read_text(custom, "languageNativeName")
+    track_description = read_text(custom, "trackDescription") or read_text(custom, "languageNativeName")
     lesson_title = read_text(custom, "lessonTitle", "the selected lesson")
     lesson_goal = read_text(custom, "lessonGoal")
     teacher_prompt = read_text(ai_teacher, "systemPrompt")
-    vocabulary = format_vocabulary(custom)
+    vocal_drills = format_vocal_drills(custom)
     phrases = format_phrases(custom)
 
-    language_label = f"{language} ({native_name})" if native_name else language
+    track_label = f"{track} ({track_description})" if track_description else track
 
     return (
-        "You are a warm, energetic, human-sounding AI language teacher for a Duolingo-inspired app — "
-        "never robotic, never a script reader. You are voice only, so speak naturally and conversationally. "
-        f"The learner is studying {language_label}, and you teach it mostly through English, "
-        "introducing target-language words and phrases slowly with their translations right away. "
+        "You are a warm, energetic, human-sounding AI vocal coach for a singing lesson app. "
+        "Never robotic, never a script reader. You are voice only, so speak naturally and conversationally. "
+        f"The learner is practicing {track_label}. Teach mostly through English with short sung or spoken prompts. "
+        "Ask the learner to sing one note, a tiny pattern, or a short phrase, then listen and give one specific correction. "
         "Use short, natural sentences with contractions and gentle encouragement — keep every reply to one "
-        "or two sentences so a beginner can easily answer out loud. "
+        "or two sentences so a beginner can easily answer by singing out loud. "
         "Listen closely to what the learner says, respond to it directly, and ask them to repeat or try "
-        "again when it helps them learn. "
+        "again with one clear change when it helps them learn. "
+        "Correct pitch, breath, tone, vowel shape, rhythm, and confidence gently. "
+        "Do not diagnose medical issues or encourage singing through pain; if the learner reports pain, tell them to stop, sip water, and rest. "
         f"Right now you are teaching {lesson_title}. "
-        f"Stay strictly within this lesson's goal — {lesson_goal or 'practice beginner speaking.'} — and only "
-        "use the vocabulary and phrases below. Do not teach unrelated topics and do not switch to another "
-        "language. "
-        f"Lesson vocabulary:\n{vocabulary or '- No vocabulary was provided.'}\n"
-        f"Lesson phrases:\n{phrases or '- No phrases were provided.'}\n"
-        f"Lesson-specific teacher notes:\n{teacher_prompt or 'No additional teacher prompt was provided.'}"
+        f"Stay strictly within this lesson's goal — {lesson_goal or 'practice beginner singing.'} — and only "
+        "use the vocal drills and practice prompts below. Do not teach unrelated topics. "
+        f"Lesson vocal drills:\n{vocal_drills or '- No vocal drills were provided.'}\n"
+        f"Lesson practice prompts:\n{phrases or '- No practice prompts were provided.'}\n"
+        f"Lesson-specific coach notes:\n{teacher_prompt or 'No additional coach prompt was provided.'}"
     )
 
 
 async def create_agent(**kwargs: object) -> Agent:
-    language = str(
-        kwargs.get("language")
-        or os.getenv("VISION_AGENT_TEACHING_LANGUAGE")
-        or DEFAULT_TEACHING_LANGUAGE
+    track = str(
+        kwargs.get("track")
+        or kwargs.get("language")
+        or os.getenv("VISION_AGENT_VOCAL_TRACK")
+        or DEFAULT_VOCAL_TRACK
     )
 
     return Agent(
         edge=getstream.Edge(),
         agent_user=User(name=AGENT_NAME, id=AGENT_USER_ID),
-        instructions=build_teacher_instructions({"languageName": language}),
+        instructions=build_teacher_instructions({"trackName": track}),
         llm=openai.Realtime(
             model=os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime-2"),
             voice=os.getenv("OPENAI_REALTIME_VOICE", "marin"),
@@ -188,7 +192,7 @@ async def read_call_custom(call: object) -> dict[str, Any]:
 def build_kickoff_message(custom: Mapping[str, Any]) -> str:
     ai_teacher = read_mapping(custom, "aiTeacher")
     kickoff = read_text(ai_teacher, "kickoffMessage")
-    language = read_text(custom, "languageName") or DEFAULT_TEACHING_LANGUAGE
+    track = read_text(custom, "trackName") or read_text(custom, "languageName") or DEFAULT_VOCAL_TRACK
     lesson_title = read_text(custom, "lessonTitle", "this lesson")
     lesson_goal = read_text(custom, "lessonGoal")
 
@@ -196,9 +200,9 @@ def build_kickoff_message(custom: Mapping[str, Any]) -> str:
         return kickoff
 
     return (
-        f"Greet the learner warmly in English, like a real {language} teacher happy to see them, "
+        f"Greet the learner warmly in English, like a real {track} vocal coach happy to hear them, "
         f"then invite them into {lesson_title} in one or two energetic, conversational sentences. "
-        f"Focus on this goal: {lesson_goal or 'help the learner practice speaking out loud.'}"
+        f"Focus on this goal: {lesson_goal or 'help the learner practice singing out loud.'}"
     )
 
 

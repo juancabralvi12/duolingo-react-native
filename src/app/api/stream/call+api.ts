@@ -5,8 +5,8 @@ import { streamServerClient } from "@/lib/streamServer";
 
 const CALL_TYPE = "audio_room";
 const ROUTE = "/api/stream/call";
-const AGENT_USER_ID = "ai-language-teacher";
-const AGENT_USER_NAME = "LinguaCoach";
+const AGENT_USER_ID = "ai-vocal-coach";
+const AGENT_USER_NAME = "Vocalingo Coach";
 
 function hashString(value: string): string {
   let hash = 5381;
@@ -25,15 +25,18 @@ function toCallId(lessonId: string, userId: string): string {
 }
 
 function toLessonCustomData(lesson: NonNullable<ReturnType<typeof getLessonById>>) {
-  const language = getLanguageByCode(lesson.languageCode);
+  const track = getLanguageByCode(lesson.languageCode);
 
   return {
     lessonId: lesson.id,
     lessonTitle: lesson.title,
     lessonGoal: lesson.goal,
+    trackCode: lesson.languageCode,
+    trackName: track?.name ?? lesson.languageCode,
+    trackDescription: track?.nativeName,
     languageCode: lesson.languageCode,
-    languageName: language?.name ?? lesson.languageCode,
-    languageNativeName: language?.nativeName,
+    languageName: track?.name ?? lesson.languageCode,
+    languageNativeName: track?.nativeName,
     vocabulary: lesson.vocabulary,
     phrases: lesson.phrases,
     aiTeacher: lesson.aiTeacher,

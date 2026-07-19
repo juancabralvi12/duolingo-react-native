@@ -1,6 +1,6 @@
 # Vision Agent Service
 
-Voice-only AI language teacher powered by Vision Agents, OpenAI Realtime, and Stream Edge transport.
+Voice-only AI vocal coach powered by Vision Agents, OpenAI Realtime, and Stream Edge transport.
 
 ## Environment
 
@@ -25,7 +25,7 @@ Optional values:
 ```bash
 OPENAI_REALTIME_MODEL=gpt-realtime-2
 OPENAI_REALTIME_VOICE=marin
-VISION_AGENT_TEACHING_LANGUAGE=Spanish
+VISION_AGENT_VOCAL_TRACK=Pitch Basics
 VISION_AGENT_IDLE_TIMEOUT=60
 VISION_AGENT_MAX_SESSIONS=4
 ```

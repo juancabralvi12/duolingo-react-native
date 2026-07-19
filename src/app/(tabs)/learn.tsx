@@ -118,11 +118,11 @@ export default function Learn() {
             ))
           ) : (
             <Text className="body-small text-center">
-              Lessons for this language are coming soon.
+              Lessons for this vocal track are coming soon.
             </Text>
           )
         ) : (
-          <Text className="body-small text-center">Practice exercises are coming soon.</Text>
+          <Text className="body-small text-center">Extra vocal drills are coming soon.</Text>
         )}
       </ScrollView>
     </SafeAreaView>

@@ -7,6 +7,8 @@ export interface Language {
 
 export interface Unit {
   id: string;
+  // Kept as languageCode for tutorial continuity; in the singing app this is
+  // the selected vocal track code.
   languageCode: string;
   order: number;
   title: string;
@@ -38,7 +40,7 @@ export interface Activity {
   phrase?: Phrase;
 }
 
-// Instructions given to the audio-based Vision Agent AI teacher for a lesson.
+// Instructions given to the audio-based Vision Agent vocal coach for a lesson.
 export interface AITeacherPrompt {
   systemPrompt: string;
   kickoffMessage: string;
@@ -47,6 +49,8 @@ export interface AITeacherPrompt {
 export interface Lesson {
   id: string;
   unitId: string;
+  // Kept as languageCode for tutorial continuity; in the singing app this is
+  // the selected vocal track code.
   languageCode: string;
   order: number;
   title: string;

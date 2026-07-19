@@ -18,17 +18,16 @@ import { colors } from "@/theme";
 import type { Lesson } from "@/types/learning";
 
 const STREAK_COUNT = 12;
-const CALL_BACKGROUND_URI = "https://picsum.photos/seed/ai-teacher-room/900/1200";
+const CALL_BACKGROUND_URI = "https://picsum.photos/seed/ai-vocal-coach-room/900/1200";
 const SELF_PREVIEW_URI =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=260&fit=crop&crop=faces";
 
-// Mock speech feedback — there's no real speech recognition yet, this is
-// just static UI to match the design until the live AI teacher (prompt 14)
-// is wired up.
+// Mock singing feedback. The live vocal coach can respond over audio, while
+// these scores stay static until realtime pitch/rhythm analysis is added.
 const FEEDBACK = [
-  { label: "Speaking", value: "Excellent", colorClassName: "text-success" },
-  { label: "Pronunciation", value: "Great", colorClassName: "text-info" },
-  { label: "Grammar", value: "Good", colorClassName: "text-primary-purple" },
+  { label: "Pitch", value: "Centered", colorClassName: "text-success" },
+  { label: "Tone", value: "Clear", colorClassName: "text-info" },
+  { label: "Timing", value: "Steady", colorClassName: "text-primary-purple" },
 ];
 
 const CALL_STATUS_META: Record<
@@ -56,22 +55,22 @@ const AGENT_STATUS_META: Record<
   { label: string; dotClassName: string; textClassName: string }
 > = {
   idle: {
-    label: "Teacher idle",
+    label: "Coach idle",
     dotClassName: "bg-text-secondary",
     textClassName: "text-text-secondary",
   },
   connecting: {
-    label: "Teacher connecting",
+    label: "Coach connecting",
     dotClassName: "bg-warning",
     textClassName: "text-warning",
   },
   connected: {
-    label: "Teacher connected",
+    label: "Coach connected",
     dotClassName: "bg-success",
     textClassName: "text-success",
   },
   failed: {
-    label: "Teacher failed",
+    label: "Coach failed",
     dotClassName: "bg-error",
     textClassName: "text-error",
   },
@@ -111,7 +110,7 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
     endCall,
   } = useLessonCall(lesson);
 
-  const [showSubtitles, setShowSubtitles] = useState(true);
+  const [showCaptions, setShowCaptions] = useState(true);
 
   const practicePhrase = lesson.phrases[0];
   const statusMeta = CALL_STATUS_META[status];
@@ -131,7 +130,7 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
             <Ionicons name="chevron-back" size={26} color={colors.neutral.textPrimary} />
           </TouchableOpacity>
           <View className="gap-0.5">
-            <Text className="font-poppins-semibold text-h3 text-text-primary">AI Teacher</Text>
+            <Text className="font-poppins-semibold text-h3 text-text-primary">AI Vocal Coach</Text>
             <View className="flex-row items-center gap-1.5">
               <View className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`} />
               <Text className={`font-poppins-medium text-body-sm ${statusMeta.textClassName}`}>
@@ -149,7 +148,7 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
 
         <View className="flex-row items-center gap-2">
           <View className="h-10 w-10 items-center justify-center rounded-full bg-surface">
-            <Ionicons name="videocam-outline" size={19} color={colors.neutral.textPrimary} />
+            <Ionicons name="musical-notes-outline" size={19} color={colors.neutral.textPrimary} />
           </View>
           <View className="h-10 w-10 items-center justify-center rounded-full bg-surface">
             <Text className="font-poppins-bold text-body-sm text-text-primary">
@@ -164,12 +163,12 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
 
       <View className="gap-0.5 px-6 pb-3">
         <Text className="font-poppins-semibold text-body-md text-text-primary">
-          {language?.name ?? "Lesson"} • {lesson.title}
+          {language?.name ?? "Vocal lesson"} • {lesson.title}
         </Text>
         <Text className="body-small">{lesson.goal}</Text>
         {agentStatus === "failed" ? (
           <Text className="font-poppins-medium text-caption text-error" numberOfLines={2}>
-            {agentErrorMessage ?? "The AI teacher could not join."}
+            {agentErrorMessage ?? "The AI vocal coach could not join."}
           </Text>
         ) : null}
       </View>
@@ -249,7 +248,7 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
                 <Text className="font-poppins-semibold text-body-lg text-text-primary">
                   {practicePhrase.text}
                 </Text>
-                {showSubtitles ? (
+                {showCaptions ? (
                   <Text className="body-small">{practicePhrase.translation}</Text>
                 ) : null}
               </View>
@@ -297,17 +296,17 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
 
           <View className="items-center gap-2">
             <TouchableOpacity
-              onPress={() => setShowSubtitles((value) => !value)}
+              onPress={() => setShowCaptions((value) => !value)}
               activeOpacity={0.85}
               className="h-14 w-14 items-center justify-center rounded-full border border-border bg-white"
             >
               <Ionicons
-                name="language"
+                name="musical-notes"
                 size={22}
-                color={showSubtitles ? colors.primary.purple : colors.neutral.textSecondary}
+                color={showCaptions ? colors.primary.purple : colors.neutral.textSecondary}
               />
             </TouchableOpacity>
-            <Text className="caption-text">Subtitles</Text>
+            <Text className="caption-text">Captions</Text>
           </View>
 
           <View className="items-center gap-2">

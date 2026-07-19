@@ -39,7 +39,7 @@ export function LessonListItem({ lesson, lessonNumber, status, onPress }: Lesson
           </Text>
         ) : null}
         {status === "locked" ? (
-          <Text className="body-small">0 / {lesson.activities.length} lessons</Text>
+          <Text className="body-small">0 / {lesson.activities.length} drills</Text>
         ) : null}
       </View>
 

@@ -324,7 +324,7 @@ async function startVisionAgent(
   }
 
   if (!res.ok) {
-    const details = await readApiError(res, "/api/vision-agent/start", "Could not start the AI teacher.");
+    const details = await readApiError(res, "/api/vision-agent/start", "Could not start the AI vocal coach.");
     throw new LessonCallError("vision_agent_start_request", details.error ?? "Vision Agent start failed.", {
       ...apiErrorContext(details),
       callId: callDetails.callId,
@@ -374,7 +374,7 @@ async function stopVisionAgent(
   }
 
   if (!res.ok) {
-    const details = await readApiError(res, "/api/vision-agent/stop", "Could not stop the AI teacher.");
+    const details = await readApiError(res, "/api/vision-agent/stop", "Could not stop the AI vocal coach.");
     throw new LessonCallError("vision_agent_stop_request", details.error ?? "Vision Agent stop failed.", {
       ...apiErrorContext(details),
       callId: session.callId,
@@ -430,7 +430,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
   const [clientState, setClientState] = useState<StreamVideoClient>();
   const [callState, setCallState] = useState<Call>();
   const [isMicOn, setIsMicOn] = useState(true);
-  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isCameraOn, setIsCameraOn] = useState(false);
   const callRef = useRef<Call | undefined>(undefined);
   const agentSessionRef = useRef<VisionAgentSession | undefined>(undefined);
   const getTokenRef = useRef(getToken);
@@ -556,19 +556,6 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
           );
         }
 
-        try {
-          await call.camera.enable();
-        } catch (err) {
-          // Camera is a nice-to-have for this voice-first lesson — a missing or
-          // denied camera (common on simulators) shouldn't fail the whole call.
-          // Leave it off; the user can retry from the Camera button.
-          console.warn("Could not enable the camera for the lesson call", {
-            callId: callDetails.callId,
-            callType: callDetails.callType,
-            err,
-          });
-        }
-
         setAgentStatus("connecting");
         try {
           const agentSession = await startVisionAgent(getCurrentToken, callDetails);
@@ -577,7 +564,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
               const stopError = toLessonCallError(
                 err,
                 "vision_agent_stop_request",
-                "AI teacher cleanup failed.",
+                "AI vocal coach cleanup failed.",
               );
               logLessonCallError(stopError, { ...debugContext, cancelledAfterAgentStart: true });
             });
@@ -591,7 +578,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
           const agentError = toLessonCallError(
             err,
             "vision_agent_start_request",
-            "The call started, but the AI teacher could not join.",
+            "The call started, but the AI vocal coach could not join.",
           );
           logLessonCallError(agentError, debugContext);
           setAgentErrorMessage(formatLessonCallError(agentError));
@@ -617,7 +604,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
       if (agentSession) {
         agentSessionRef.current = undefined;
         stopVisionAgent(() => getTokenRef.current(), agentSession).catch((err) => {
-          const lessonError = toLessonCallError(err, "vision_agent_stop_request", "AI teacher cleanup failed.");
+          const lessonError = toLessonCallError(err, "vision_agent_stop_request", "AI vocal coach cleanup failed.");
           logLessonCallError(lessonError, { lessonId: lesson.id, callId: agentSession.callId });
         });
       }
@@ -649,7 +636,7 @@ export function useLessonCall(lesson: Lesson): UseLessonCallResult {
         await stopVisionAgent(() => getTokenRef.current(), agentSession);
         setAgentStatus("idle");
       } catch (err) {
-        const lessonError = toLessonCallError(err, "vision_agent_stop_request", "AI teacher cleanup failed.");
+        const lessonError = toLessonCallError(err, "vision_agent_stop_request", "AI vocal coach cleanup failed.");
         logLessonCallError(lessonError, { lessonId: lesson.id, callId: agentSession.callId });
         setAgentStatus("failed");
         setAgentErrorMessage(formatLessonCallError(lessonError));

@@ -19,9 +19,9 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   index: { label: "Home", activeIcon: "home", inactiveIcon: "home-outline" },
   learn: { label: "Learn", activeIcon: "book", inactiveIcon: "book-outline" },
   "ai-teacher": {
-    label: "AI Teacher",
-    activeIcon: "hardware-chip",
-    inactiveIcon: "hardware-chip-outline",
+    label: "Coach",
+    activeIcon: "mic",
+    inactiveIcon: "mic-outline",
   },
   chat: { label: "Chat", activeIcon: "chatbubble", inactiveIcon: "chatbubble-outline" },
   profile: { label: "Profile", activeIcon: "person", inactiveIcon: "person-outline" },

@@ -5,7 +5,7 @@ export default function SignIn() {
     <AuthScreen
       mode="sign-in"
       title="Welcome back"
-      subtitle="Continue your language journey ✨"
+      subtitle="Continue your singing practice"
       submitLabel="Log in"
       footerText="Don't have an account?"
       footerLinkText="Sign up"

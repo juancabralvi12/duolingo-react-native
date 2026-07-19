@@ -24,7 +24,7 @@ export function NextUpCard({ title, subtitle, avatarUri, onPress }: NextUpCardPr
       <View className="relative">
         <Image source={{ uri: avatarUri }} className="h-14 w-14 rounded-full" resizeMode="cover" />
         <View className="absolute -bottom-1 -right-1 h-6 w-6 items-center justify-center rounded-full bg-success">
-          <Ionicons name="videocam" size={13} color="#FFFFFF" />
+          <Ionicons name="mic" size={13} color="#FFFFFF" />
         </View>
       </View>
     </TouchableOpacity>
