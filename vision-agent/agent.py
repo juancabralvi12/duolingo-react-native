@@ -25,12 +25,38 @@ AGENT_NAME = "Vocalingo Coach"
 AGENT_USER_ID = "ai-vocal-coach"
 DEFAULT_VOCAL_TRACK = "the selected vocal track"
 
+
+def read_float_env(name: str, default: float) -> float:
+    value = os.getenv(name)
+    if value is None:
+        return default
+
+    try:
+        return float(value)
+    except ValueError:
+        print(f"Warning: {name} must be a number; using {default}.")
+        return default
+
+
+def read_int_env(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None:
+        return default
+
+    try:
+        return int(value)
+    except ValueError:
+        print(f"Warning: {name} must be an integer; using {default}.")
+        return default
+
+
 def build_realtime_session_config() -> RealtimeSessionCreateRequestParam:
     """Fresh session config per agent instance — Realtime.__init__ mutates it in place.
 
-    The default semantic VAD is too eager to treat a stray noise or breath as a
-    full turn and respond to it. server_vad with a raised threshold requires
-    actual voiced audio above that level before it counts as speech at all.
+    Singing lessons need more sensitive turn detection than normal speech bots:
+    a learner may sing a quiet "ah", hum, or hold one note with no words. These
+    defaults bias toward catching that sung input while still waiting long
+    enough for a held note to finish before the coach responds.
     """
     return RealtimeSessionCreateRequestParam(
         type="realtime",
@@ -39,10 +65,12 @@ def build_realtime_session_config() -> RealtimeSessionCreateRequestParam:
                 transcription=AudioTranscriptionParam(model="gpt-4o-mini-transcribe"),
                 turn_detection=ServerVad(
                     type="server_vad",
-                    threshold=0.6,
-                    prefix_padding_ms=300,
-                    silence_duration_ms=600,
+                    threshold=read_float_env("VISION_AGENT_VAD_THRESHOLD", 0.32),
+                    prefix_padding_ms=read_int_env("VISION_AGENT_VAD_PREFIX_PADDING_MS", 700),
+                    silence_duration_ms=read_int_env("VISION_AGENT_VAD_SILENCE_DURATION_MS", 1100),
+                    idle_timeout_ms=read_int_env("VISION_AGENT_VAD_IDLE_TIMEOUT_MS", 20000),
                     create_response=True,
+                    interrupt_response=True,
                 ),
             )
         ),
@@ -142,7 +170,11 @@ def build_teacher_instructions(custom: Mapping[str, Any] | None = None) -> str:
         "You are a warm, energetic, human-sounding AI vocal coach for a singing lesson app. "
         "Never robotic, never a script reader. You are voice only, so speak naturally and conversationally. "
         f"The learner is practicing {track_label}. Teach mostly through English with short sung or spoken prompts. "
+        "At the start of each lesson, briefly explain what the learner will practice, name the first thing they should sing, and tell them you will wait. "
+        "After you give a practice prompt, stop speaking and give the learner time to sing before offering feedback. "
         "Ask the learner to sing one note, a tiny pattern, or a short phrase, then listen and give one specific correction. "
+        "Treat singing, humming, solfege, open vowels like ah/oo/mm, and unclear note attempts as valid user turns even when the transcript is sparse or strange. "
+        "When you hear any sung attempt, respond with feedback instead of waiting for spoken words. "
         "Use short, natural sentences with contractions and gentle encouragement — keep every reply to one "
         "or two sentences so a beginner can easily answer by singing out loud. "
         "Listen closely to what the learner says, respond to it directly, and ask them to repeat or try "
@@ -195,14 +227,40 @@ def build_kickoff_message(custom: Mapping[str, Any]) -> str:
     track = read_text(custom, "trackName") or read_text(custom, "languageName") or DEFAULT_VOCAL_TRACK
     lesson_title = read_text(custom, "lessonTitle", "this lesson")
     lesson_goal = read_text(custom, "lessonGoal")
+    first_drill = read_mapping_list(custom, "vocabulary")[0:1]
+    first_prompt = read_mapping_list(custom, "phrases")[0:1]
+    drill = first_drill[0] if first_drill else {}
+    prompt = first_prompt[0] if first_prompt else {}
+    drill_name = read_text(drill, "word")
+    drill_action = read_text(drill, "translation")
+    practice_text = read_text(prompt, "text")
+    practice_goal = read_text(prompt, "translation")
 
-    if kickoff:
-        return kickoff
+    drill_sentence = (
+        f"Your first drill is {drill_name}: {drill_action}."
+        if drill_name and drill_action
+        else f"Your first drill is {drill_name}."
+        if drill_name
+        else ""
+    )
+    practice_sentence = (
+        f"When you're ready, sing {practice_text}; the goal is {practice_goal}."
+        if practice_text and practice_goal
+        else f"When you're ready, sing {practice_text}."
+        if practice_text
+        else "When you're ready, sing the first practice note or pattern from this lesson."
+    )
+    kickoff_context = f" Coach note: {kickoff}" if kickoff else ""
 
     return (
-        f"Greet the learner warmly in English, like a real {track} vocal coach happy to hear them, "
-        f"then invite them into {lesson_title} in one or two energetic, conversational sentences. "
-        f"Focus on this goal: {lesson_goal or 'help the learner practice singing out loud.'}"
+        "Start the lesson with a warm, concise setup in first person, then stop speaking and wait for the learner. "
+        "Use no more than four short sentences. "
+        f"Explain that this is {lesson_title} in {track}. "
+        f"The goal is: {lesson_goal or 'practice beginner singing out loud.'} "
+        f"{drill_sentence} "
+        f"{practice_sentence} "
+        "End with: Take your time — sing it when you're ready, and I'll listen. "
+        f"{kickoff_context}"
     )
 
 
@@ -223,7 +281,7 @@ runner = Runner(
     AgentLauncher(
         create_agent=create_agent,
         join_call=join_call,
-        agent_idle_timeout=float(os.getenv("VISION_AGENT_IDLE_TIMEOUT", "60")),
+        agent_idle_timeout=float(os.getenv("VISION_AGENT_IDLE_TIMEOUT", "180")),
         max_concurrent_sessions=int(os.getenv("VISION_AGENT_MAX_SESSIONS", "4")),
         max_sessions_per_call=1,
     )
