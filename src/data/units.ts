@@ -7,8 +7,8 @@ export const units: Unit[] = [
     id: "pitch-unit-1",
     languageCode: "pitch",
     order: 1,
-    title: "Find Your Notes",
-    description: "Sing simple notes, match pitch, and build confidence.",
+    title: "Finding Your Vocal Range",
+    description: "Explore low, middle, and high comfortable notes without strain.",
     imageUrl: "https://picsum.photos/seed/pitch-unit-1/800/500",
   },
   {

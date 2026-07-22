@@ -2,8 +2,17 @@ import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { CallContent, StreamCall, StreamVideo } from "@stream-io/video-react-native-sdk";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
@@ -29,6 +38,8 @@ const FEEDBACK = [
   { label: "Tone", value: "Clear", colorClassName: "text-info" },
   { label: "Timing", value: "Steady", colorClassName: "text-primary-purple" },
 ];
+
+type PracticeAttemptStatus = "idle" | "listening" | "complete";
 
 const CALL_STATUS_META: Record<
   LessonCallStatus,
@@ -77,7 +88,7 @@ const AGENT_STATUS_META: Record<
 };
 
 export default function LessonDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, mode } = useLocalSearchParams<{ id: string; mode?: string }>();
   const lesson = getLessonById(id);
 
   if (!lesson) {
@@ -90,7 +101,166 @@ export default function LessonDetail() {
     );
   }
 
+  if (mode === "practice") {
+    return <LessonPracticeScreen lesson={lesson} />;
+  }
+
   return <LessonCallScreen lesson={lesson} />;
+}
+
+function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [attemptStatus, setAttemptStatus] = useState<PracticeAttemptStatus>("idle");
+  const [cantSpeakNow, setCantSpeakNow] = useState(false);
+  const practiceSteps = lesson.phrases.slice(0, 2);
+  const activeStep = practiceSteps[stepIndex] ?? lesson.phrases[0];
+  const isListening = attemptStatus === "listening";
+  const isComplete = attemptStatus === "complete";
+  const progress = practiceSteps.length > 1 ? stepIndex / (practiceSteps.length - 1) : 1;
+
+  useEffect(() => {
+    if (!isListening) return undefined;
+
+    const timeout = setTimeout(() => {
+      setAttemptStatus("complete");
+    }, 2600);
+
+    return () => clearTimeout(timeout);
+  }, [isListening, stepIndex]);
+
+  const handleStartAttempt = () => {
+    if (cantSpeakNow || isListening) return;
+    setAttemptStatus("listening");
+  };
+
+  const handleRestart = () => {
+    setAttemptStatus("idle");
+  };
+
+  const handlePrevious = () => {
+    setStepIndex((currentIndex) => Math.max(currentIndex - 1, 0));
+    setAttemptStatus("idle");
+  };
+
+  const handleNext = () => {
+    setStepIndex((currentIndex) => Math.min(currentIndex + 1, practiceSteps.length - 1));
+    setAttemptStatus("idle");
+  };
+
+  return (
+    <SafeAreaView style={styles.practiceRoot}>
+      <View className="flex-1 justify-between px-5 pb-8 pt-8">
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity onPress={() => router.back()} hitSlop={10} activeOpacity={0.8}>
+            <Ionicons name="close" size={40} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <View className="flex-row items-center gap-2">
+            <Text className="font-poppins-medium text-[20px] leading-[26px] text-white">
+              {"Can't speak now"}
+            </Text>
+            <Switch
+              value={cantSpeakNow}
+              onValueChange={setCantSpeakNow}
+              trackColor={{ false: "#BFC1C5", true: "#D8E3F6" }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor="#BFC1C5"
+              style={styles.practiceSwitch}
+            />
+          </View>
+        </View>
+
+        <View className="items-center gap-5">
+          <View className="h-[505px] w-full rounded-[24px] bg-white px-7 pb-7 pt-7" style={styles.practiceCard}>
+            <View className="flex-row items-center justify-between">
+              <Ionicons name="flag-outline" size={31} color="#AEB5BF" />
+              <View
+                className={`min-w-[132px] items-center rounded-2xl px-5 py-2 ${
+                  isComplete ? "bg-[#10C89B]" : "bg-[#E8EBFF]"
+                }`}
+              >
+                {isComplete ? (
+                  <Ionicons name="checkmark" size={34} color="#FFFFFF" />
+                ) : (
+                  <Text className="font-poppins-medium text-[23px] leading-[30px] text-white">
+                    {isListening ? "Listening..." : "Speak now..."}
+                  </Text>
+                )}
+              </View>
+              <Ionicons name="bookmark-outline" size={31} color="#AEB5BF" />
+            </View>
+
+            <View className="flex-1 items-center justify-center gap-20">
+              <View className="items-center gap-12">
+                <Text
+                  className={`text-center font-poppins-semibold text-[40px] leading-[48px] ${
+                    isComplete ? "text-[#08B768]" : "text-[#C6C6C8]"
+                  }`}
+                  numberOfLines={2}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.68}
+                >
+                  {activeStep?.text ?? lesson.title}
+                </Text>
+                <Text className="text-center font-poppins-medium text-[20px] leading-[27px] text-[#16181D]">
+                  {activeStep?.translation ?? lesson.goal}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleRestart}
+                activeOpacity={0.85}
+                className="flex-row items-center gap-3 rounded-full bg-[#F1F2F4] px-9 py-3.5"
+              >
+                <Ionicons name="refresh" size={28} color="#2257FF" />
+                <Text className="font-poppins-bold text-[22px] leading-[28px] text-[#2257FF]">
+                  Restart
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text className="font-poppins-medium text-[20px] leading-[26px] text-white/55">
+            {stepIndex + 1} of {practiceSteps.length}
+          </Text>
+        </View>
+
+        <View className="gap-7">
+          <View className="h-1.5 overflow-hidden rounded-full bg-white/70">
+            <View className="h-full rounded-full bg-white" style={{ width: `${progress * 100}%` }} />
+          </View>
+
+          <View className="flex-row items-center justify-between">
+            <Text className="font-poppins-bold text-[20px] leading-[26px] text-white">
+              <Text className="text-white/35">OFF / </Text>
+              CC
+            </Text>
+
+            <TouchableOpacity onPress={handlePrevious} activeOpacity={0.8} hitSlop={8}>
+              <Ionicons name="arrow-undo" size={40} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleStartAttempt}
+              activeOpacity={0.86}
+              disabled={cantSpeakNow || isListening}
+              className={`h-[94px] w-[94px] items-center justify-center rounded-full border-[3px] border-white ${
+                cantSpeakNow ? "opacity-50" : ""
+              }`}
+            >
+              <Ionicons name="pause" size={44} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handleNext} activeOpacity={0.8} hitSlop={8}>
+              <Ionicons name="arrow-redo" size={40} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <Text className="font-poppins-medium text-[20px] leading-[26px] text-white">1x</Text>
+          </View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 }
 
 function LessonCallScreen({ lesson }: { lesson: Lesson }) {
@@ -342,3 +512,20 @@ function LessonCallScreen({ lesson }: { lesson: Lesson }) {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  practiceRoot: {
+    flex: 1,
+    backgroundColor: "#666463",
+  },
+  practiceCard: {
+    shadowColor: "#151515",
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.12,
+    shadowRadius: 28,
+    elevation: 10,
+  },
+  practiceSwitch: {
+    transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }],
+  },
+});

@@ -10,6 +10,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,6 +37,7 @@ const SHOW_HOME_V2 = true;
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
 type HomeV2LessonNode = {
+  lessonId: string;
   title: string;
   avatarUri?: string;
   icon?: IoniconName;
@@ -60,23 +62,26 @@ const HOME_V2_AVATARS = [
 const HOME_V2_UNITS: HomeV2Unit[] = [
   {
     order: 1,
-    title: "The Basics",
+    title: "Finding Your Vocal Range",
     startsAtY: 0,
     lessons: [
       {
-        title: "Find your starting note",
+        lessonId: "pitch-unit-1-lesson-1",
+        title: "Find your low note",
         avatarUri: HOME_V2_AVATARS[0],
         align: "center",
         wide: true,
       },
       {
-        title: "Hold a steady tone",
+        lessonId: "pitch-unit-1-lesson-2",
+        title: "Find your high note",
         avatarUri: HOME_V2_AVATARS[1],
         align: "left",
         wide: true,
       },
       {
-        title: "Skill check",
+        lessonId: "pitch-unit-1-lesson-3",
+        title: "Range check",
         icon: "checkmark-circle",
         align: "center",
         wide: true,
@@ -89,18 +94,21 @@ const HOME_V2_UNITS: HomeV2Unit[] = [
     startsAtY: 720,
     lessons: [
       {
+        lessonId: "breath-unit-1-lesson-1",
         title: "Breathe before you sing",
         avatarUri: HOME_V2_AVATARS[2],
         align: "right",
         wide: true,
       },
       {
+        lessonId: "breath-unit-1-lesson-2",
         title: "Sing with even air",
         avatarUri: HOME_V2_AVATARS[3],
         align: "center",
         wide: true,
       },
       {
+        lessonId: "breath-unit-1-lesson-2",
         title: "Skill check",
         icon: "checkmark-circle",
         align: "left",
@@ -114,12 +122,14 @@ const HOME_V2_UNITS: HomeV2Unit[] = [
     startsAtY: 1420,
     lessons: [
       {
+        lessonId: "pitch-unit-1-lesson-4",
         title: "Step up and down",
         avatarUri: HOME_V2_AVATARS[0],
         align: "center",
         wide: true,
       },
       {
+        lessonId: "warmups-unit-1-lesson-2",
         title: "Sing a short melody",
         avatarUri: HOME_V2_AVATARS[2],
         align: "right",
@@ -368,12 +378,18 @@ function HomeV2LessonCard({
         : "self-center";
 
   return (
-    <View
+    <TouchableOpacity
+      onPress={() =>
+        router.push({
+          pathname: "/lesson/[id]",
+          params: { id: lesson.lessonId, mode: "practice" },
+        })
+      }
+      activeOpacity={0.86}
       className={`${alignClassName} h-[108px] flex-row items-center rounded-[34px] bg-white px-7 ${
         lesson.wide ? "w-[285px]" : "w-[240px]"
       }`}
       style={styles.homeV2CardShadow}
-      pointerEvents="none"
     >
       <View className="mr-6 h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-[#F1F4F8]">
         {lesson.avatarUri ? (
@@ -399,7 +415,7 @@ function HomeV2LessonCard({
       >
         {lesson.title}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
