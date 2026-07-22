@@ -15,7 +15,9 @@ type TabConfig = {
   inactiveIcon: IoniconName;
 };
 
-const TAB_CONFIG: Record<string, TabConfig> = {
+const SHOW_HOME_V2_TAB_BAR = true;
+
+const TAB_CONFIG_V1: Record<string, TabConfig> = {
   index: { label: "Home", activeIcon: "home", inactiveIcon: "home-outline" },
   learn: { label: "Learn", activeIcon: "book", inactiveIcon: "book-outline" },
   "ai-teacher": {
@@ -27,10 +29,31 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   profile: { label: "Profile", activeIcon: "person", inactiveIcon: "person-outline" },
 };
 
+const TAB_CONFIG_V2: Record<string, TabConfig> = {
+  index: { label: "Home", activeIcon: "pulse", inactiveIcon: "pulse-outline" },
+  learn: { label: "Free Talk", activeIcon: "person", inactiveIcon: "person-outline" },
+  "ai-teacher": {
+    label: "Practice",
+    activeIcon: "flash",
+    inactiveIcon: "flash-outline",
+  },
+  chat: { label: "Challenge", activeIcon: "trophy", inactiveIcon: "trophy-outline" },
+  profile: { label: "Profile", activeIcon: "person", inactiveIcon: "person-outline" },
+};
+
 const BAR_HEIGHT = 64;
 const CIRCLE_SIZE = 48;
+const V2_BAR_HEIGHT = 92;
 
-export function CustomTabBar({ state, navigation, insets }: BottomTabBarProps) {
+export function CustomTabBar(props: BottomTabBarProps) {
+  if (SHOW_HOME_V2_TAB_BAR) {
+    return <HomeV2TabBar {...props} />;
+  }
+
+  return <HomeV1TabBar {...props} />;
+}
+
+function HomeV1TabBar({ state, navigation, insets }: BottomTabBarProps) {
   const [tabWidth, setTabWidth] = useState(0);
   const translateX = useSharedValue(0);
   const hasMeasured = useRef(false);
@@ -80,7 +103,7 @@ export function CustomTabBar({ state, navigation, insets }: BottomTabBarProps) {
       )}
 
       {state.routes.map((route, index) => {
-        const config = TAB_CONFIG[route.name];
+        const config = TAB_CONFIG_V1[route.name];
         if (!config) return null;
 
         const isFocused = state.index === index;
@@ -111,6 +134,59 @@ export function CustomTabBar({ state, navigation, insets }: BottomTabBarProps) {
               color={isFocused ? "#FFFFFF" : colors.neutral.textSecondary}
             />
             {!isFocused && <Text className="caption-text mt-1">{config.label}</Text>}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+function HomeV2TabBar({ state, navigation, insets }: BottomTabBarProps) {
+  return (
+    <View
+      className="flex-row border-t border-[#DADDE3] bg-white px-1"
+      style={{ height: V2_BAR_HEIGHT + insets.bottom, paddingBottom: insets.bottom }}
+    >
+      {state.routes.map((route, index) => {
+        const config = TAB_CONFIG_V2[route.name];
+        if (!config) return null;
+
+        const isFocused = state.index === index;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: "tabPress",
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            onPress={onPress}
+            activeOpacity={0.8}
+            className="flex-1 items-center justify-center"
+            style={{ height: V2_BAR_HEIGHT }}
+          >
+            <Ionicons
+              name={isFocused ? config.activeIcon : config.inactiveIcon}
+              size={32}
+              color={isFocused ? "#245CFF" : "#9A9A9A"}
+            />
+            <Text
+              className={`mt-1 font-poppins-medium text-body-sm ${
+                isFocused ? "text-[#245CFF]" : "text-[#9A9A9A]"
+              }`}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {config.label}
+            </Text>
           </TouchableOpacity>
         );
       })}
