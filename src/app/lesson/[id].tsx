@@ -1,7 +1,9 @@
-import { useUser } from "@clerk/expo";
+import { useAuth, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { CallContent, StreamCall, StreamVideo } from "@stream-io/video-react-native-sdk";
+import { useEventListener } from "expo";
 import { router, useLocalSearchParams } from "expo-router";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -40,6 +42,15 @@ const FEEDBACK = [
 ];
 
 type PracticeAttemptStatus = "idle" | "listening" | "complete";
+type LessonVideoStatus = "idle" | "generating" | "ready" | "failed";
+
+interface LessonVideoResponse {
+  lessonId?: string;
+  status?: LessonVideoStatus;
+  videoUrl?: string;
+  errorMessage?: string;
+  error?: string;
+}
 
 const CALL_STATUS_META: Record<
   LessonCallStatus,
@@ -109,9 +120,15 @@ export default function LessonDetail() {
 }
 
 function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
+  const { getToken, isSignedIn } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
   const [attemptStatus, setAttemptStatus] = useState<PracticeAttemptStatus>("idle");
   const [cantSpeakNow, setCantSpeakNow] = useState(false);
+  const [hasWatchedIntro, setHasWatchedIntro] = useState(false);
+  const [videoStatus, setVideoStatus] = useState<LessonVideoStatus>("idle");
+  const [videoUrl, setVideoUrl] = useState<string>();
+  const [videoErrorMessage, setVideoErrorMessage] = useState<string>();
+  const [generationProgress, setGenerationProgress] = useState(0.08);
   const practiceSteps = lesson.phrases.slice(0, 2);
   const activeStep = practiceSteps[stepIndex] ?? lesson.phrases[0];
   const isListening = attemptStatus === "listening";
@@ -127,6 +144,90 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
 
     return () => clearTimeout(timeout);
   }, [isListening, stepIndex]);
+
+  useEffect(() => {
+    if (videoStatus !== "generating" && videoStatus !== "idle") return undefined;
+
+    const interval = setInterval(() => {
+      setGenerationProgress((currentProgress) => Math.min(currentProgress + 0.045, 0.92));
+    }, 1200);
+
+    return () => clearInterval(interval);
+  }, [videoStatus]);
+
+  useEffect(() => {
+    if (hasWatchedIntro) return undefined;
+
+    if (!isSignedIn) return undefined;
+
+    let cancelled = false;
+    let pollTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    async function requestLessonVideo(method: "GET" | "POST"): Promise<LessonVideoResponse> {
+      const token = await getToken();
+      const res = await fetch(`/api/lesson-video/${encodeURIComponent(lesson.id)}`, {
+        method,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      const body = (await res.json().catch(() => ({}))) as LessonVideoResponse;
+
+      if (!res.ok) {
+        throw new Error(body.error ?? body.errorMessage ?? `Video request failed (${res.status}).`);
+      }
+
+      return body;
+    }
+
+    async function pollVideoStatus() {
+      try {
+        const body = await requestLessonVideo("GET");
+        if (cancelled) return;
+
+        setVideoStatus(body.status ?? "idle");
+        setVideoUrl(body.videoUrl);
+        setVideoErrorMessage(body.errorMessage);
+        if (body.status === "ready") setGenerationProgress(1);
+
+        if (body.status === "generating" || body.status === "idle") {
+          pollTimeout = setTimeout(pollVideoStatus, 8000);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setVideoStatus("failed");
+        setVideoErrorMessage(err instanceof Error ? err.message : "Could not check the lesson video.");
+      }
+    }
+
+    async function startLessonVideo() {
+      try {
+        setVideoStatus("generating");
+        setVideoErrorMessage(undefined);
+
+        const body = await requestLessonVideo("POST");
+        if (cancelled) return;
+
+        setVideoStatus(body.status ?? "generating");
+        setVideoUrl(body.videoUrl);
+        setVideoErrorMessage(body.errorMessage);
+        if (body.status === "ready") setGenerationProgress(1);
+
+        if (body.status !== "ready") {
+          pollTimeout = setTimeout(pollVideoStatus, 8000);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setVideoStatus("failed");
+        setVideoErrorMessage(err instanceof Error ? err.message : "Could not generate the lesson video.");
+      }
+    }
+
+    startLessonVideo();
+
+    return () => {
+      cancelled = true;
+      if (pollTimeout) clearTimeout(pollTimeout);
+    };
+  }, [getToken, hasWatchedIntro, isSignedIn, lesson.id]);
 
   const handleStartAttempt = () => {
     if (cantSpeakNow || isListening) return;
@@ -146,6 +247,122 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
     setStepIndex((currentIndex) => Math.min(currentIndex + 1, practiceSteps.length - 1));
     setAttemptStatus("idle");
   };
+
+  if (!hasWatchedIntro) {
+    const effectiveVideoStatus = isSignedIn ? videoStatus : "failed";
+    const effectiveVideoErrorMessage = isSignedIn
+      ? videoErrorMessage
+      : "Sign in to generate the lesson demo video.";
+    const canWatchVideo = effectiveVideoStatus === "ready" && videoUrl;
+
+    if (canWatchVideo) {
+      return (
+        <LessonDemoVideoPlayer
+          lesson={lesson}
+          videoUrl={videoUrl}
+          onClose={() => router.back()}
+          onDone={() => setHasWatchedIntro(true)}
+        />
+      );
+    }
+
+    return (
+      <SafeAreaView style={styles.practiceRoot}>
+        <View className="flex-1 justify-between px-5 pb-8 pt-8">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity onPress={() => router.back()} hitSlop={10} activeOpacity={0.8}>
+              <Ionicons name="close" size={40} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <View className="rounded-full bg-white/15 px-4 py-2">
+              <Text className="font-poppins-medium text-[18px] leading-[24px] text-white">
+                Preparing demo
+              </Text>
+            </View>
+          </View>
+
+          <View className="items-center gap-5">
+            <View className="h-[505px] w-full rounded-[24px] bg-white px-7 pb-8 pt-7" style={styles.practiceCard}>
+              <View className="flex-row items-center justify-between">
+                <Ionicons name="videocam-outline" size={31} color="#AEB5BF" />
+                <View
+                  className={`min-w-[132px] items-center rounded-2xl px-5 py-2 ${
+                    effectiveVideoStatus === "failed" ? "bg-[#FF5E63]" : "bg-[#E8EBFF]"
+                  }`}
+                >
+                  {effectiveVideoStatus === "generating" ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Ionicons
+                      name={effectiveVideoStatus === "failed" ? "alert" : "sparkles"}
+                      size={34}
+                      color="#FFFFFF"
+                    />
+                  )}
+                </View>
+                <Ionicons name="bookmark-outline" size={31} color="#AEB5BF" />
+              </View>
+
+              <View className="flex-1 items-center justify-center gap-12">
+                <View className="items-center gap-7">
+                  <Text className="text-center font-poppins-semibold text-[38px] leading-[46px] text-[#C6C6C8]">
+                    Creating your demo
+                  </Text>
+                  <Text className="text-center font-poppins-medium text-[20px] leading-[27px] text-[#16181D]">
+                    {lesson.title}
+                  </Text>
+                  <Text className="text-center body-small">
+                    {effectiveVideoErrorMessage ?? "Veo is generating a short coach video for this exercise."}
+                  </Text>
+                </View>
+
+                <View className="w-full gap-4">
+                  <View className="h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
+                    <View
+                      className="h-full rounded-full bg-[#2257FF]"
+                      style={{ width: `${generationProgress * 100}%` }}
+                    />
+                  </View>
+                  <Text className="text-center font-poppins-bold text-[22px] leading-[28px] text-[#2257FF]">
+                    {Math.round(generationProgress * 100)}%
+                  </Text>
+                </View>
+
+                {effectiveVideoStatus === "failed" ? (
+                  <TouchableOpacity
+                    onPress={() => setHasWatchedIntro(true)}
+                    activeOpacity={0.85}
+                    className="flex-row items-center gap-3 rounded-full bg-[#F1F2F4] px-9 py-3.5"
+                  >
+                    <Ionicons name="arrow-forward" size={26} color="#2257FF" />
+                    <Text className="font-poppins-bold text-[22px] leading-[28px] text-[#2257FF]">
+                      Start practice
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+
+            <Text className="font-poppins-medium text-[20px] leading-[26px] text-white/55">
+              Demo first
+            </Text>
+          </View>
+
+          <View className="gap-7">
+            <View className="h-1.5 overflow-hidden rounded-full bg-white/70">
+              <View className="h-full rounded-full bg-white" style={{ width: `${generationProgress * 100}%` }} />
+            </View>
+
+            <View className="flex-row items-center justify-center">
+              <View className="h-[94px] w-[94px] items-center justify-center rounded-full border-[3px] border-white">
+                <ActivityIndicator color="#FFFFFF" size="large" />
+              </View>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.practiceRoot}>
@@ -257,6 +474,79 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
 
             <Text className="font-poppins-medium text-[20px] leading-[26px] text-white">1x</Text>
           </View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function LessonDemoVideoPlayer({
+  lesson,
+  onClose,
+  onDone,
+  videoUrl,
+}: {
+  lesson: Lesson;
+  onClose: () => void;
+  onDone: () => void;
+  videoUrl: string;
+}) {
+  const [isFirstFrameReady, setIsFirstFrameReady] = useState(false);
+  const player = useVideoPlayer({ uri: videoUrl }, (videoPlayer) => {
+    videoPlayer.loop = false;
+    videoPlayer.play();
+  });
+
+  useEventListener(player, "playToEnd", onDone);
+
+  return (
+    <SafeAreaView style={styles.reelsRoot}>
+      <View className="flex-1 bg-black">
+        <VideoView
+          player={player}
+          nativeControls={false}
+          contentFit="cover"
+          style={styles.reelsVideo}
+          onFirstFrameRender={() => setIsFirstFrameReady(true)}
+        />
+
+        {!isFirstFrameReady ? (
+          <View className="absolute inset-0 items-center justify-center bg-black">
+            <ActivityIndicator color="#FFFFFF" size="large" />
+          </View>
+        ) : null}
+
+        <View className="absolute left-5 right-5 top-8 flex-row items-center justify-between">
+          <TouchableOpacity onPress={onClose} hitSlop={10} activeOpacity={0.8}>
+            <Ionicons name="close" size={40} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <View className="rounded-full bg-black/35 px-4 py-2">
+            <Text className="font-poppins-medium text-[18px] leading-[24px] text-white">
+              Demo
+            </Text>
+          </View>
+        </View>
+
+        <View className="absolute bottom-8 left-5 right-5 gap-5">
+          <View className="gap-2">
+            <Text className="font-poppins-bold text-[30px] leading-[36px] text-white">
+              {lesson.title}
+            </Text>
+            <Text className="font-poppins-medium text-[17px] leading-[24px] text-white/80">
+              Watch the coach, then copy it in the next card.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={onDone}
+            activeOpacity={0.86}
+            className="self-start rounded-full bg-white px-6 py-3"
+          >
+            <Text className="font-poppins-bold text-[17px] leading-[23px] text-[#111318]">
+              Start practice
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -517,6 +807,17 @@ const styles = StyleSheet.create({
   practiceRoot: {
     flex: 1,
     backgroundColor: "#666463",
+  },
+  reelsRoot: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+  reelsVideo: {
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
   },
   practiceCard: {
     shadowColor: "#151515",
