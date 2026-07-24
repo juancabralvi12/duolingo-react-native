@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { CallContent, StreamCall, StreamVideo } from "@stream-io/video-react-native-sdk";
 import { useEventListener } from "expo";
 import { router, useLocalSearchParams } from "expo-router";
-import { VideoView, useVideoPlayer } from "expo-video";
+import { type VideoSource, VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
+import { lessonIntroVideos } from "@/constants/videos";
 import { getLanguageByCode } from "@/data/languages";
 import { getLessonById } from "@/data/lessons";
 import {
@@ -42,7 +43,7 @@ const FEEDBACK = [
 ];
 
 type PracticeAttemptStatus = "idle" | "listening" | "complete";
-type LessonVideoStatus = "idle" | "generating" | "ready" | "failed";
+type LessonVideoStatus = "idle" | "checking" | "generating" | "ready" | "failed";
 
 interface LessonVideoResponse {
   lessonId?: string;
@@ -131,6 +132,7 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
   const [generationProgress, setGenerationProgress] = useState(0.08);
   const practiceSteps = lesson.phrases.slice(0, 2);
   const activeStep = practiceSteps[stepIndex] ?? lesson.phrases[0];
+  const localIntroVideoSource = lessonIntroVideos[lesson.id];
   const isListening = attemptStatus === "listening";
   const isComplete = attemptStatus === "complete";
   const progress = practiceSteps.length > 1 ? stepIndex / (practiceSteps.length - 1) : 1;
@@ -146,7 +148,7 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
   }, [isListening, stepIndex]);
 
   useEffect(() => {
-    if (videoStatus !== "generating" && videoStatus !== "idle") return undefined;
+    if (videoStatus !== "generating") return undefined;
 
     const interval = setInterval(() => {
       setGenerationProgress((currentProgress) => Math.min(currentProgress + 0.045, 0.92));
@@ -158,15 +160,17 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
   useEffect(() => {
     if (hasWatchedIntro) return undefined;
 
+    if (localIntroVideoSource) return undefined;
+
     if (!isSignedIn) return undefined;
 
     let cancelled = false;
     let pollTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    async function requestLessonVideo(method: "GET" | "POST"): Promise<LessonVideoResponse> {
+    async function requestLessonVideo(): Promise<LessonVideoResponse> {
       const token = await getToken();
       const res = await fetch(`/api/lesson-video/${encodeURIComponent(lesson.id)}`, {
-        method,
+        method: "GET",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       const body = (await res.json().catch(() => ({}))) as LessonVideoResponse;
@@ -178,9 +182,14 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
       return body;
     }
 
-    async function pollVideoStatus() {
+    async function loadVideoStatus(isInitialLoad = false) {
       try {
-        const body = await requestLessonVideo("GET");
+        if (isInitialLoad) {
+          setVideoStatus("checking");
+          setVideoErrorMessage(undefined);
+        }
+
+        const body = await requestLessonVideo();
         if (cancelled) return;
 
         setVideoStatus(body.status ?? "idle");
@@ -188,8 +197,8 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
         setVideoErrorMessage(body.errorMessage);
         if (body.status === "ready") setGenerationProgress(1);
 
-        if (body.status === "generating" || body.status === "idle") {
-          pollTimeout = setTimeout(pollVideoStatus, 8000);
+        if (body.status === "generating") {
+          pollTimeout = setTimeout(() => loadVideoStatus(false), 8000);
         }
       } catch (err) {
         if (cancelled) return;
@@ -198,36 +207,13 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
       }
     }
 
-    async function startLessonVideo() {
-      try {
-        setVideoStatus("generating");
-        setVideoErrorMessage(undefined);
-
-        const body = await requestLessonVideo("POST");
-        if (cancelled) return;
-
-        setVideoStatus(body.status ?? "generating");
-        setVideoUrl(body.videoUrl);
-        setVideoErrorMessage(body.errorMessage);
-        if (body.status === "ready") setGenerationProgress(1);
-
-        if (body.status !== "ready") {
-          pollTimeout = setTimeout(pollVideoStatus, 8000);
-        }
-      } catch (err) {
-        if (cancelled) return;
-        setVideoStatus("failed");
-        setVideoErrorMessage(err instanceof Error ? err.message : "Could not generate the lesson video.");
-      }
-    }
-
-    startLessonVideo();
+    loadVideoStatus(true);
 
     return () => {
       cancelled = true;
       if (pollTimeout) clearTimeout(pollTimeout);
     };
-  }, [getToken, hasWatchedIntro, isSignedIn, lesson.id]);
+  }, [getToken, hasWatchedIntro, isSignedIn, lesson.id, localIntroVideoSource]);
 
   const handleStartAttempt = () => {
     if (cantSpeakNow || isListening) return;
@@ -252,14 +238,33 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
     const effectiveVideoStatus = isSignedIn ? videoStatus : "failed";
     const effectiveVideoErrorMessage = isSignedIn
       ? videoErrorMessage
-      : "Sign in to generate the lesson demo video.";
-    const canWatchVideo = effectiveVideoStatus === "ready" && videoUrl;
+      : "Sign in to watch the lesson demo video.";
+    const introVideoSource: VideoSource | undefined = localIntroVideoSource ?? videoUrl;
+    const canWatchVideo = Boolean(introVideoSource) && (Boolean(localIntroVideoSource) || effectiveVideoStatus === "ready");
+    const isWaitingForVideo = effectiveVideoStatus === "checking" || effectiveVideoStatus === "generating";
+    const videoTitle =
+      effectiveVideoStatus === "idle"
+        ? "Demo not ready"
+        : effectiveVideoStatus === "checking"
+          ? "Checking demo"
+          : effectiveVideoStatus === "generating"
+            ? "Preparing demo"
+            : "Demo unavailable";
+    const videoStatusMessage =
+      effectiveVideoErrorMessage ??
+      (effectiveVideoStatus === "idle"
+        ? "This lesson demo has not been generated by the backend yet."
+        : effectiveVideoStatus === "checking"
+          ? "Looking for a prepared AI video for this lesson."
+          : effectiveVideoStatus === "generating"
+            ? "The backend is preparing a short coach video for this exercise."
+            : "The prepared lesson demo could not be loaded.");
 
-    if (canWatchVideo) {
+    if (canWatchVideo && introVideoSource) {
       return (
         <LessonDemoVideoPlayer
           lesson={lesson}
-          videoUrl={videoUrl}
+          videoSource={introVideoSource}
           onClose={() => router.back()}
           onDone={() => setHasWatchedIntro(true)}
         />
@@ -276,7 +281,7 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
 
             <View className="rounded-full bg-white/15 px-4 py-2">
               <Text className="font-poppins-medium text-[18px] leading-[24px] text-white">
-                Preparing demo
+                Demo first
               </Text>
             </View>
           </View>
@@ -290,7 +295,7 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
                     effectiveVideoStatus === "failed" ? "bg-[#FF5E63]" : "bg-[#E8EBFF]"
                   }`}
                 >
-                  {effectiveVideoStatus === "generating" ? (
+                  {isWaitingForVideo ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <Ionicons
@@ -306,29 +311,31 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
               <View className="flex-1 items-center justify-center gap-12">
                 <View className="items-center gap-7">
                   <Text className="text-center font-poppins-semibold text-[38px] leading-[46px] text-[#C6C6C8]">
-                    Creating your demo
+                    {videoTitle}
                   </Text>
                   <Text className="text-center font-poppins-medium text-[20px] leading-[27px] text-[#16181D]">
                     {lesson.title}
                   </Text>
                   <Text className="text-center body-small">
-                    {effectiveVideoErrorMessage ?? "Veo is generating a short coach video for this exercise."}
+                    {videoStatusMessage}
                   </Text>
                 </View>
 
-                <View className="w-full gap-4">
-                  <View className="h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
-                    <View
-                      className="h-full rounded-full bg-[#2257FF]"
-                      style={{ width: `${generationProgress * 100}%` }}
-                    />
+                {isWaitingForVideo ? (
+                  <View className="w-full gap-4">
+                    <View className="h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
+                      <View
+                        className="h-full rounded-full bg-[#2257FF]"
+                        style={{ width: `${generationProgress * 100}%` }}
+                      />
+                    </View>
+                    <Text className="text-center font-poppins-bold text-[22px] leading-[28px] text-[#2257FF]">
+                      {Math.round(generationProgress * 100)}%
+                    </Text>
                   </View>
-                  <Text className="text-center font-poppins-bold text-[22px] leading-[28px] text-[#2257FF]">
-                    {Math.round(generationProgress * 100)}%
-                  </Text>
-                </View>
+                ) : null}
 
-                {effectiveVideoStatus === "failed" ? (
+                {!isWaitingForVideo ? (
                   <TouchableOpacity
                     onPress={() => setHasWatchedIntro(true)}
                     activeOpacity={0.85}
@@ -350,12 +357,19 @@ function LessonPracticeScreen({ lesson }: { lesson: Lesson }) {
 
           <View className="gap-7">
             <View className="h-1.5 overflow-hidden rounded-full bg-white/70">
-              <View className="h-full rounded-full bg-white" style={{ width: `${generationProgress * 100}%` }} />
+              <View
+                className="h-full rounded-full bg-white"
+                style={{ width: `${isWaitingForVideo ? generationProgress * 100 : 0}%` }}
+              />
             </View>
 
             <View className="flex-row items-center justify-center">
               <View className="h-[94px] w-[94px] items-center justify-center rounded-full border-[3px] border-white">
-                <ActivityIndicator color="#FFFFFF" size="large" />
+                {isWaitingForVideo ? (
+                  <ActivityIndicator color="#FFFFFF" size="large" />
+                ) : (
+                  <Ionicons name="arrow-forward" size={42} color="#FFFFFF" />
+                )}
               </View>
             </View>
           </View>
@@ -484,15 +498,15 @@ function LessonDemoVideoPlayer({
   lesson,
   onClose,
   onDone,
-  videoUrl,
+  videoSource,
 }: {
   lesson: Lesson;
   onClose: () => void;
   onDone: () => void;
-  videoUrl: string;
+  videoSource: VideoSource;
 }) {
   const [isFirstFrameReady, setIsFirstFrameReady] = useState(false);
-  const player = useVideoPlayer({ uri: videoUrl }, (videoPlayer) => {
+  const player = useVideoPlayer(videoSource, (videoPlayer) => {
     videoPlayer.loop = false;
     videoPlayer.play();
   });

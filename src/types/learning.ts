@@ -46,6 +46,11 @@ export interface AITeacherPrompt {
   kickoffMessage: string;
 }
 
+export interface LessonVideoContent {
+  prompt: string;
+  videoUrl?: string;
+}
+
 export interface Lesson {
   id: string;
   unitId: string;
@@ -59,5 +64,6 @@ export interface Lesson {
   phrases: Phrase[];
   activities: Activity[];
   aiTeacher: AITeacherPrompt;
+  aiVideo?: LessonVideoContent;
   imageUrl: string;
 }

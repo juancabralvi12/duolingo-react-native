@@ -17,6 +17,7 @@ type LessonSeed = {
   phrases: Phrase[];
   teacherFocus: string;
   kickoffMessage: string;
+  videoPrompt?: string;
 };
 
 function vocabularyActivity(id: string, vocabulary: VocabularyItem): Activity {
@@ -56,6 +57,7 @@ function createLesson(seed: LessonSeed): Lesson {
       phraseActivity(`${seed.id}-a4`, seed.phrases[1]),
     ],
     aiTeacher: vocalCoachPrompt(seed.teacherFocus, seed.kickoffMessage),
+    ...(seed.videoPrompt ? { aiVideo: { prompt: seed.videoPrompt } } : {}),
     imageUrl: `https://picsum.photos/seed/${seed.id}/200/200`,
   };
 }
@@ -80,6 +82,8 @@ export const lessons: Lesson[] = [
     teacherFocus: "Help the learner explore the bottom of their range gently and stop before any strain.",
     kickoffMessage:
       "Hi, I'm your vocal coach. We'll slide down gently, find one easy low note, and keep everything relaxed.",
+    videoPrompt:
+      "Create an 8-second vertical 9:16 instructional video that plays before a mobile practice card in a beginner singing app. The teacher is a friendly expressive pug vocal coach in a cozy podcast-style practice room, framed waist-up behind a small studio microphone with warm shelves, headphones, and soft acoustic panels in the background. The pug should clearly demonstrate what the next card asks the learner to do: take a relaxed low breath, hum gently on mm, slide downward from a comfortable middle note to an easy low note, then hold a soft low ah for two counts. Use simple paw gestures that trace the downward slide and an encouraging facial expression. The video should feel playful, polished, and easy to copy, like an intro demo before the learner sees the practice card. No text overlays, no logos, no sheet music, no dramatic stage lighting, no medical advice, and do not show throat strain.",
   }),
   createLesson({
     id: "pitch-unit-1-lesson-2",

@@ -38,6 +38,11 @@ interface VeoOperationResponse {
   };
 }
 
+interface LessonVideoGenerateRequest {
+  force?: boolean;
+  prompt?: string;
+}
+
 declare global {
   // Shared by the video file proxy while the dev server process is alive.
   var __vocalingoLessonVideoJobs: Map<string, LessonVideoJob> | undefined;
@@ -54,6 +59,29 @@ function getGeminiApiKey(): string | undefined {
 
 function getVeoModel(): string {
   return process.env.GEMINI_VEO_MODEL ?? DEFAULT_VEO_MODEL;
+}
+
+function getAdminSecret(): string | undefined {
+  return process.env.LESSON_VIDEO_ADMIN_SECRET;
+}
+
+function getBearerToken(request: Request): string | undefined {
+  const authHeader = request.headers.get("authorization");
+  return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+}
+
+function requireLessonVideoAdmin(request: Request): Response | undefined {
+  const secret = getAdminSecret();
+  if (!secret) {
+    return routeErrorResponse("Set LESSON_VIDEO_ADMIN_SECRET to generate lesson videos from the backend.", 501);
+  }
+
+  const providedSecret = request.headers.get("x-lesson-video-secret") ?? getBearerToken(request);
+  if (providedSecret !== secret) {
+    return routeErrorResponse("Missing or invalid lesson video admin secret.", 403);
+  }
+
+  return undefined;
 }
 
 function makeAccessToken(): string {
@@ -77,6 +105,21 @@ function makeDemoPrompt(lesson: Lesson): string {
     "No text overlays, no logos, no sheet music, no medical advice, no dramatic stage lighting.",
     "Natural studio ambience and a soft vocal demonstration are okay.",
   ].join(" ");
+}
+
+function getGenerationPrompt(lesson: Lesson, promptOverride?: string): string {
+  const prompt = promptOverride?.trim() || lesson.aiVideo?.prompt.trim() || makeDemoPrompt(lesson);
+  return prompt;
+}
+
+async function readGenerateRequest(request: Request): Promise<LessonVideoGenerateRequest> {
+  const text = await request.text().catch(() => "");
+  if (!text.trim()) return {};
+
+  const body = JSON.parse(text) as unknown;
+  if (!body || typeof body !== "object") return {};
+
+  return body as LessonVideoGenerateRequest;
 }
 
 function routeErrorResponse(message: string, status = 500) {
@@ -166,6 +209,10 @@ export async function GET(request: Request) {
 
   const job = getJobs().get(lessonId);
   if (!job) {
+    if (lesson.aiVideo?.videoUrl) {
+      return Response.json({ lessonId, status: "ready", videoUrl: lesson.aiVideo.videoUrl });
+    }
+
     return Response.json({ lessonId, status: "idle" });
   }
 
@@ -180,24 +227,43 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  try {
-    await requireClerkUserId(request);
-  } catch (err) {
-    return clerkAuthErrorResponse(err, ROUTE);
-  }
+  const adminError = requireLessonVideoAdmin(request);
+  if (adminError) return adminError;
 
   const lessonId = getLessonIdFromRequest(request);
   const lesson = lessonId ? getLessonById(lessonId) : undefined;
   if (!lesson || !lessonId) return routeErrorResponse("Lesson not found.", 404);
 
+  let generateRequest: LessonVideoGenerateRequest;
+  try {
+    generateRequest = await readGenerateRequest(request);
+  } catch {
+    return routeErrorResponse("Use a valid JSON body when passing lesson video options.", 400);
+  }
+
+  if (generateRequest.prompt !== undefined && typeof generateRequest.prompt !== "string") {
+    return routeErrorResponse("Lesson video prompt must be a string.", 400);
+  }
+
+  const shouldForceGenerate = generateRequest.force === true;
+  const apiKey = getGeminiApiKey();
+
   const existingJob = getJobs().get(lessonId);
-  if (existingJob && existingJob.status !== "failed") {
+  if (existingJob && existingJob.status !== "failed" && !shouldForceGenerate) {
+    if (existingJob.status === "generating" && apiKey) {
+      await pollVeoOperation(existingJob, apiKey);
+    }
+
     return jobResponse(request, existingJob);
   }
 
-  const apiKey = getGeminiApiKey();
   if (!apiKey) {
     return routeErrorResponse("Set GEMINI_API_KEY or GOOGLE_API_KEY to generate lesson videos.", 501);
+  }
+
+  const prompt = getGenerationPrompt(lesson, generateRequest.prompt);
+  if (prompt.length < 20) {
+    return routeErrorResponse("Lesson video prompt is too short.", 400);
   }
 
   const res = await fetch(`${GEMINI_BASE_URL}/models/${getVeoModel()}:predictLongRunning`, {
@@ -207,7 +273,7 @@ export async function POST(request: Request) {
       "x-goog-api-key": apiKey,
     },
     body: JSON.stringify({
-      instances: [{ prompt: makeDemoPrompt(lesson) }],
+      instances: [{ prompt }],
       parameters: {
         aspectRatio: "9:16",
       },
